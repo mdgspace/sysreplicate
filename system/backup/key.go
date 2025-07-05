@@ -9,25 +9,22 @@ import (
     "os"
     "path/filepath"
     "strings"
-    "syscall"
     "time"
-
-    "golang.org/x/term"
 )
 
-//structure of backed up keys
+// Structure of backed up keys (removed Salt field)
 type BackupData struct {
     
 	Timestamp     time.Time                `json:"timestamp"`
     
-	SystemInfo    SystemInfo              `json:"system_info"`
+	SystemInfo    SystemInfo               `json:"system_info"`
     
-	EncryptedKeys map[string]EncryptedKey `json:"encrypted_keys"`
+	EncryptedKeys map[string]EncryptedKey  `json:"encrypted_keys"`
     
-	Salt          []byte                  `json:"salt"`
+	EncryptionKey []byte                   `json:"encryption_key"` // Store the key directly
 }
 
-// basic system information
+// Basic system information
 type SystemInfo struct {
     
 	Hostname string `json:"hostname"`
@@ -53,29 +50,23 @@ type EncryptedKey struct {
 type BackupManager struct {
     config *EncryptionConfig
 }
+
 func NewBackupManager() *BackupManager {
     return &BackupManager{}
 }
 
-// create a complete backup of keys
+//create a complete backup of keys (no password required)
 func (bm *BackupManager) CreateBackup(customPaths []string) error {
     fmt.Println("Starting key backup process...")
 
-    //password for encryption
-    password, err := bm.getPassword()
+    //generate random encryption key (no password needed)
+    key, err := GenerateKey()
     if err != nil {
-        return fmt.Errorf("failed to get password: %w", err)
-    }
-
-    // generate salt
-    salt, err := GenerateSalt()
-    if err != nil {
-        return fmt.Errorf("failed to generate salt: %w", err)
+        return fmt.Errorf("failed to generate encryption key: %w", err)
     }
 
     bm.config = &EncryptionConfig{
-        Password: password,
-        Salt:     salt,
+        Key: key,
     }
 
     // search standard locations
@@ -90,7 +81,6 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 
     //combine all locations
     allLocations := append(standardLocations, customLocations...)
-
     if len(allLocations) == 0 {
         fmt.Println("No key locations found to backup.")
         return nil
@@ -101,7 +91,7 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
         Timestamp:     time.Now(),
         SystemInfo:    bm.getSystemInfo(),
         EncryptedKeys: make(map[string]EncryptedKey),
-        Salt:          salt,
+        EncryptionKey: key, // Store the key in backup data
     }
 
     //encrypt and store keys
@@ -116,9 +106,8 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 
     //creating tarball for the backup storing
     fmt.Println("Creating backup tarball...")
-    tarballPath := fmt.Sprintf("dist/key-backup-%s.tar.gz", 
+    tarballPath := fmt.Sprintf("dist/key-backup-%s.tar.gz",
         time.Now().Format("2006-01-02-15-04-05"))
-    
     err = bm.createTarball(backupData, tarballPath)
     if err != nil {
         return fmt.Errorf("failed to create tarball: %w", err)
@@ -126,7 +115,6 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 
     fmt.Printf("Backup completed successfully: %s\n", tarballPath)
     fmt.Printf("Backed up %d key files\n", len(backupData.EncryptedKeys))
-    
     return nil
 }
 
@@ -136,18 +124,14 @@ func (bm *BackupManager) processLocation(location KeyLocation, backupData *Backu
         //get file info for permissions
         fileInfo, err := os.Stat(filePath)
         if err != nil {
-            
-			continue
-        
-		}
+            continue
+        }
 
         // call encryption of the file
         encryptedData, err := EncryptFile(filePath, bm.config)
         if err != nil {
-        
-			return fmt.Errorf("failed to encrypt %s: %w", filePath, err)
-        
-		}
+            return fmt.Errorf("failed to encrypt %s: %w", filePath, err)
+        }
 
         // store encrypted key
         keyID := filepath.Base(filePath) + "_" + strings.ReplaceAll(filePath, "/", "_")
@@ -164,13 +148,10 @@ func (bm *BackupManager) processLocation(location KeyLocation, backupData *Backu
 // processCustomPaths converts custom paths to KeyLocation objects
 func (bm *BackupManager) processCustomPaths(customPaths []string) []KeyLocation {
     var locations []KeyLocation
-    
     for _, path := range customPaths {
         if path == "" {
-        
-			continue
-        
-		}
+            continue
+        }
 
         // Expand home directory
         if strings.HasPrefix(path, "~/") {
@@ -211,7 +192,6 @@ func (bm *BackupManager) processCustomPaths(customPaths []string) []KeyLocation 
             })
         }
     }
-    
     return locations
 }
 
@@ -222,7 +202,6 @@ func (bm *BackupManager) getSystemInfo() SystemInfo {
     if username == "" {
         username = os.Getenv("USERNAME")
     }
-    
     return SystemInfo{
         Hostname: hostname,
         Username: username,
@@ -230,29 +209,8 @@ func (bm *BackupManager) getSystemInfo() SystemInfo {
     }
 }
 
-// prompt users for encryption password
-func (bm *BackupManager) getPassword() (string, error) {
-    fmt.Print("Enter password for key encryption: ")
-    bytePassword, err := term.ReadPassword(int(syscall.Stdin))
-    if err != nil {
-        return "", err
-    }
-    fmt.Println()
-    
-    password := string(bytePassword)
-    if len(password) < 8 {
-        return "", fmt.Errorf("password must be at least 8 characters long") ////just for better recurity - can add more such conditions
-    }
-    
-    return password, nil
-}
-
-//compressed tarball with the backup data
+//create compressed tarball with the backup data
 func (bm *BackupManager) createTarball(backupData *BackupData, tarballPath string) error {
-    // if err := os.MkdirAll(filepath.Dir(tarballPath), 0755); err != nil {
-    //     return err
-    // }
-
     // Create tarball file
     file, err := os.Create(tarballPath)
     if err != nil {
@@ -296,7 +254,6 @@ func (bm *BackupManager) createTarball(backupData *BackupData, tarballPath strin
 func GetCustomPaths() []string {
     var paths []string
     scanner := bufio.NewScanner(os.Stdin)
-    
     fmt.Println("\nEnter additional key locations (one per line, empty line to finish):")
     fmt.Println("Examples: ~/mykeys/, /opt/certificates/, ~/.config/app/keys")
     
@@ -310,9 +267,7 @@ func GetCustomPaths() []string {
         if path == "" {
             break
         }
-        
         paths = append(paths, path)
     }
-    
     return paths
 }
