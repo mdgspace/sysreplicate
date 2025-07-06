@@ -256,6 +256,7 @@ func GetCustomPaths() []string {
     scanner := bufio.NewScanner(os.Stdin)
     fmt.Println("\nEnter additional key locations (one per line, empty line to finish):")
     fmt.Println("Examples: ~/mykeys/, /opt/certificates/, ~/.config/app/keys")
+    fmt.Println("Note: .ssh and .gnupg are default scouting locations")
     
     for {
         fmt.Print("Path: ")
