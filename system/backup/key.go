@@ -1,52 +1,16 @@
 package backup
 
 import (
-    "archive/tar"
-    "bufio"
-    "compress/gzip"
-    "encoding/json"
-    "fmt"
-    "os"
-    "path/filepath"
-    "strings"
-    "time"
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+	"github.com/mdgspace/sysreplicate/system/output"
 )
 
-// Structure of backed up keys (removed Salt field)
-type BackupData struct {
-    
-	Timestamp     time.Time                `json:"timestamp"`
-    
-	SystemInfo    SystemInfo               `json:"system_info"`
-    
-	EncryptedKeys map[string]EncryptedKey  `json:"encrypted_keys"`
-    
-	EncryptionKey []byte                   `json:"encryption_key"` // Store the key directly
-}
-
-// Basic system information
-type SystemInfo struct {
-    
-	Hostname string `json:"hostname"`
-    
-	Username string `json:"username"`
-    
-	OS       string `json:"os"`
-}
-
-//encrypted key file
-type EncryptedKey struct {
-    
-	OriginalPath string `json:"original_path"`
-    
-	KeyType      string `json:"key_type"`
-    
-	EncryptedData string `json:"encrypted_data"`
-    
-	Permissions  uint32 `json:"permissions"`
-}
-
-//handles the backup and restore operations
+//backup and restore operations
 type BackupManager struct {
     config *EncryptionConfig
 }
@@ -87,10 +51,10 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
     }
 
     //create backup data
-    backupData := &BackupData{
+    backupData := &output.BackupData{
         Timestamp:     time.Now(),
         SystemInfo:    bm.getSystemInfo(),
-        EncryptedKeys: make(map[string]EncryptedKey),
+        EncryptedKeys: make(map[string]output.EncryptedKey),
         EncryptionKey: key, // Store the key in backup data
     }
 
@@ -108,7 +72,7 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
     fmt.Println("Creating backup tarball...")
     tarballPath := fmt.Sprintf("dist/key-backup-%s.tar.gz",
         time.Now().Format("2006-01-02-15-04-05"))
-    err = bm.createTarball(backupData, tarballPath)
+    err = output.CreateBackupTarball(backupData, tarballPath)
     if err != nil {
         return fmt.Errorf("failed to create tarball: %w", err)
     }
@@ -118,8 +82,9 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
     return nil
 }
 
+
 // processLocation processes a single key location
-func (bm *BackupManager) processLocation(location KeyLocation, backupData *BackupData) error {
+func (bm *BackupManager) processLocation(location KeyLocation, backupData *output.BackupData) error {
     for _, filePath := range location.Files {
         //get file info for permissions
         fileInfo, err := os.Stat(filePath)
@@ -135,7 +100,7 @@ func (bm *BackupManager) processLocation(location KeyLocation, backupData *Backu
 
         // store encrypted key
         keyID := filepath.Base(filePath) + "_" + strings.ReplaceAll(filePath, "/", "_")
-        backupData.EncryptedKeys[keyID] = EncryptedKey{
+        backupData.EncryptedKeys[keyID] = output.EncryptedKey{
             OriginalPath:  filePath,
             KeyType:       location.Type,
             EncryptedData: encryptedData,
@@ -196,58 +161,17 @@ func (bm *BackupManager) processCustomPaths(customPaths []string) []KeyLocation 
 }
 
 // collect basic system information
-func (bm *BackupManager) getSystemInfo() SystemInfo {
+func (bm *BackupManager) getSystemInfo() output.SystemInfo {
     hostname, _ := os.Hostname()
     username := os.Getenv("USER")
     if username == "" {
         username = os.Getenv("USERNAME")
     }
-    return SystemInfo{
+    return output.SystemInfo{
         Hostname: hostname,
         Username: username,
         OS:       "linux",
     }
-}
-
-//create compressed tarball with the backup data
-func (bm *BackupManager) createTarball(backupData *BackupData, tarballPath string) error {
-    // Create tarball file
-    file, err := os.Create(tarballPath)
-    if err != nil {
-        return err
-    }
-    defer file.Close()
-
-    //gzip writer
-    gzipWriter := gzip.NewWriter(file)
-    defer gzipWriter.Close()
-
-    //tar writer
-    tarWriter := tar.NewWriter(gzipWriter)
-    defer tarWriter.Close()
-
-    // Convert backup data to JSON
-    jsonData, err := json.MarshalIndent(backupData, "", "  ")
-    if err != nil {
-        return err
-    }
-
-    //add JSON file to tarball
-    header := &tar.Header{
-        Name: "backup.json",
-        Mode: 0644,
-        Size: int64(len(jsonData)),
-    }
-
-    if err := tarWriter.WriteHeader(header); err != nil {
-        return err
-    }
-
-    if _, err := tarWriter.Write(jsonData); err != nil {
-        return err
-    }
-
-    return nil
 }
 
 // custom key path prompt to the userss
