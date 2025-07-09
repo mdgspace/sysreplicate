@@ -29,6 +29,12 @@ type EncryptedKey struct {
 	Permissions   uint32 `json:"permissions"`
 }
 
+type Dotfile struct {
+	Path     string `json:"path"`
+	Content  string `json:"content"`
+	Mode     uint32 `json:"mode"`
+	IsBinary bool   `json:"is_binary"`
+}
 //create a compressed tarball with the backup data
 func CreateBackupTarball(backupData *BackupData, tarballPath string) error {
 	//create tarball file
