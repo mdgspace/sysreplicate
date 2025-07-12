@@ -7,43 +7,55 @@ import (
 )
 
 // FetchPackages returns a list of installed packages for the given base distro.
-func FetchPackages(baseDistro string) []string {
-	var cmd *exec.Cmd
-	var cmdYay *exec.Cmd
+func FetchPackages(baseDistro string) map[string][]string {
+	cmds := make(map[string]*exec.Cmd)
+
 	switch baseDistro {
 	case "debian":
-		cmd = exec.Command("dpkg", "--get-selections")
+		// cmds["official_packages"] = exec.Command("dpkg", "--get-selections")
+		cmds["official_packages"] = exec.Command("sh", "-c", `dpkg-query -W -f='${Package}\n' | sort > /tmp/all.txt
+apt-mark showmanual | sort > /tmp/manual.txt
+comm -12 /tmp/all.txt /tmp/manual.txt | xargs -r dpkg-query -W -f='${Package}=${Version}\n'
+rm /tmp/all.txt /tmp/manual.txt
+`)
+		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+
 	case "arch":
-		cmd = exec.Command("pacman", "-Qn")
-		cmdYay = exec.Command("pacman", "-Qm")
+		// cmds["official_packages"] = exec.Command("pacman", "-Qen")
+		// cmds["yay_packages"] = exec.Command("pacman", "-Qem")
+		cmds["official_packages"] = exec.Command("sh", "-c", `pacman -Qen | cut -d' ' -f1`)
+		cmds["yay_packages"] = exec.Command("sh", "-c", `pacman -Qem | cut -d' ' -f1`)
+		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+
 	case "rhel", "fedora":
-		cmd = exec.Command("rpm", "-qa")
+		cmds["official_packages"] = exec.Command("rpm", "-qa") // need to change this later
+		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+
 	case "void":
-		cmd = exec.Command("xbps-query", "-l")
+		cmds["official_packages"] = exec.Command("xbps-query", "-l") // need to change this later
+		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+
 	default:
 		log.Println("Your distro is unsupported, cannot identify package manager!")
-		return []string{"unknown"}
-	}
-
-	if baseDistro != "arch" {
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Println("Error in retrieving packages:", err)
+		return map[string][]string{
+			"error": {"unsupported distro"},
 		}
-		return strings.Split(strings.TrimSpace(string(output)), "\n")
 	}
 
-	outputPacman, err := cmd.CombinedOutput()
-	outPutYay, errYay := cmdYay.CombinedOutput()
-	if err != nil {
-		log.Println("Error in retrieving Pacman packages:", err)
+	packageMap := make(map[string][]string)
+
+	for key, value := range cmds {
+		output, err := value.CombinedOutput()
+		if err != nil {
+			log.Println("Error in retrieving ", key, ": ", err)
+			continue
+		}
+		packageMap[key] = strings.Split(strings.TrimSpace((string(output))), "\n")
 	}
-	if errYay != nil {
-		log.Println("Error in retrieving Yay packages:", errYay)
-	}
-	pacmanPackages := strings.Split(strings.TrimSpace(string(outputPacman)), "\n")
-	yayPackages := strings.Split(strings.TrimSpace(string(outPutYay)), "\n")
-	// Mark the split between official and AUR packages
-	yayPackages = append([]string{"YayPackages"}, yayPackages...)
-	return append(pacmanPackages, yayPackages...)
+	return packageMap
+
 }
