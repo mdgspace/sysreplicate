@@ -28,17 +28,31 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 
 	hostname, _ := os.Hostname()
 
+	// Convert []Dotfile to []output.Dotfile
+    outputFiles := make([]output.Dotfile, len(files))
+    for i, file := range files {
+        outputFiles[i] = output.Dotfile{
+            Path:     file.Path,
+            RealPath: file.RealPath,
+            IsDir:    file.IsDir,
+            IsBinary: file.IsBinary,
+            Mode:     file.Mode,
+            Content:  file.Content,
+        }
+    }
+
+
 	// Create backup metadata
-	meta := &BackupMetadata{
+	// struct from output
+	meta := &output.BackupMetadata{
 		Timestamp: time.Now(),
 		Hostname:  hostname,
-		Files:     files,
+		Files:     outputFiles,
 	}
 
-	// Tarball creation 
-	if err := CreateDotfilesBackupTarball(meta, outputTar); err != nil {
-		return fmt.Errorf("failed to create backup tarball: %w", err)
-	}
+    if err := output.CreateDotfilesBackupTarball(meta, outputTar); err != nil {
+        return fmt.Errorf("failed to create backup tarball: %w", err)
+    }
 
 	fmt.Println("Backup complete:", outputTar)
 	return nil
