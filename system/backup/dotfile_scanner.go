@@ -20,7 +20,7 @@ var DotfilePaths = []string{
 
 type Dotfile struct {
 	Path     string
-	RelPath  string
+	RealPath  string
 	IsDir    bool
 	IsBinary bool
 	Mode     os.FileMode
@@ -61,10 +61,10 @@ func ScanDotfiles() ([]Dotfile, error) {
 			continue
 		}
 
-		relPath, _ := filepath.Rel(home, full)
+		realPath, _ := filepath.Rel(home, full)
 		entry := Dotfile{
 			Path:    full,
-			RelPath: relPath,
+			RealPath: realPath,
 			IsDir:   info.IsDir(),
 			Mode:    info.Mode(),
 		}
