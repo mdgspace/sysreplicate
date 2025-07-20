@@ -1,13 +1,13 @@
 package backup
 
 import (
-    "crypto/aes"
-    "crypto/cipher"
-    "crypto/rand"
-    "encoding/base64"
-    "fmt"
-    "io"
-    "os"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"io"
+	"os"
 )
 
 //simplified encryption config without password

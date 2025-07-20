@@ -9,7 +9,7 @@ import (
 // FetchPackages returns a list of installed packages for the given base distro.
 func FetchPackages(baseDistro string) map[string][]string {
 	cmds := make(map[string]*exec.Cmd)
-
+	
 	switch baseDistro {
 	case "debian":
 		// cmds["official_packages"] = exec.Command("dpkg", "--get-selections")
