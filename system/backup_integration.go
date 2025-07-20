@@ -3,7 +3,10 @@ package system
 import (
 	"fmt"
 	"log"
+	"bufio"
 	"os"
+	"strings"
+
 	"github.com/mdgspace/sysreplicate/system/backup"
 )
 
@@ -50,4 +53,14 @@ func RunDotfileBackup() {
 	}
 
 	fmt.Println("Backup complete!")
+}
+func restoreBackup() {
+	fmt.Println("Restoring Backup")
+	fmt.Println("Enter backup tarball path")
+
+	reader := bufio.NewReader(os.Stdin)
+    name, _ := reader.ReadString('\n') // reads until newline
+    name = strings.TrimSpace(name)
+    
+
 }
