@@ -18,26 +18,70 @@ apt-mark showmanual | sort > /tmp/manual.txt
 comm -12 /tmp/all.txt /tmp/manual.txt | xargs -r dpkg-query -W -f='${Package}=${Version}\n'
 rm /tmp/all.txt /tmp/manual.txt
 `)
-		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
-		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		_, err := exec.LookPath("flatpak")
+		if err == nil {
+			cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		} else {
+			cmds["flatpak_packages"] = exec.Command("true")
+		}
+
+		_, err = exec.LookPath("snap")
+		if err == nil {
+			cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		} else {
+			cmds["snap_packages"] = exec.Command("true")
+		}
 
 	case "arch":
 		// cmds["official_packages"] = exec.Command("pacman", "-Qen")
 		// cmds["yay_packages"] = exec.Command("pacman", "-Qem")
 		cmds["official_packages"] = exec.Command("sh", "-c", `pacman -Qen | cut -d' ' -f1`)
 		cmds["yay_packages"] = exec.Command("sh", "-c", `pacman -Qem | cut -d' ' -f1`)
-		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
-		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		_, err := exec.LookPath("flatpak")
+		if err == nil {
+			cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		} else {
+			cmds["flatpak_packages"] = exec.Command("true")
+		}
+
+		_, err = exec.LookPath("snap")
+		if err == nil {
+			cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		} else {
+			cmds["snap_packages"] = exec.Command("true")
+		}
 
 	case "rhel", "fedora":
 		cmds["official_packages"] = exec.Command("rpm", "-qa") // need to change this later
-		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
-		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		_, err := exec.LookPath("flatpak")
+		if err == nil {
+			cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		} else {
+			cmds["flatpak_packages"] = exec.Command("true")
+		}
+
+		_, err = exec.LookPath("snap")
+		if err == nil {
+			cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		} else {
+			cmds["snap_packages"] = exec.Command("true")
+		}
 
 	case "void":
 		cmds["official_packages"] = exec.Command("xbps-query", "-l") // need to change this later
-		cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
-		cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		_, err := exec.LookPath("flatpak")
+		if err == nil {
+			cmds["flatpak_packages"] = exec.Command("flatpak", "list", "--app", "--columns=origin,application")
+		} else {
+			cmds["flatpak_packages"] = exec.Command("true")
+		}
+
+		_, err = exec.LookPath("snap")
+		if err == nil {
+			cmds["snap_packages"] = exec.Command("sh", "-c", "snap list | awk 'NR>1 {print $1}'")
+		} else {
+			cmds["snap_packages"] = exec.Command("true")
+		}
 
 	default:
 		log.Println("Your distro is unsupported, cannot identify package manager!")

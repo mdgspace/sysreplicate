@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-//backupData structure for tarball creation
+// backupData structure for tarball creation
 type BackupData struct {
-	Timestamp     time.Time                `json:"timestamp"`
+	Timestamp     time.Time               `json:"timestamp"`
 	SystemInfo    SystemInfo              `json:"system_info"`
 	EncryptedKeys map[string]EncryptedKey `json:"encrypted_keys"`
 	EncryptionKey []byte                  `json:"encryption_key"`
@@ -29,7 +29,7 @@ type EncryptedKey struct {
 	Permissions   uint32 `json:"permissions"`
 }
 
-//create a compressed tarball with the backup data
+// create a compressed tarball with the backup data
 func CreateBackupTarball(backupData *BackupData, tarballPath string) error {
 	//create tarball file
 	file, err := os.Create(tarballPath)
