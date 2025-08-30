@@ -32,13 +32,14 @@ type EncryptedKey struct {
 }
 
 type Dotfile struct {
-	Path     string
-	RealPath string
-	IsDir    bool
-	IsBinary bool
-	Mode     os.FileMode
-	Content  string // ignore for the binary files
+	Path     string      `json:"path"`
+	RealPath string      `json:"real_path"`
+	IsDir    bool        `json:"is_dir"`
+	IsBinary bool        `json:"is_binary"`
+	Mode     os.FileMode `json:"mode"`
+	Content  string      `json:"content"` // ignore for the binary files
 }
+
 type BackupMetadata struct {
 	Timestamp time.Time `json:"timestamp"`
 	Hostname  string    `json:"hostname"`
