@@ -104,7 +104,7 @@ func runPackageReplication() {
 		return
 	}
 
-	if err := output.GenerateInstallScript(baseDistro, packages, scriptOutputPath); err != nil {
+	if err := output.GenerateInstallScript(baseDistro, packages, nil, scriptOutputPath); err != nil {
 		log.Println("Error generating install script:", err)
 	} else {
 		fmt.Println("Script generated successfully at:", scriptOutputPath)

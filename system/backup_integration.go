@@ -29,10 +29,12 @@ func RunUnifiedBackup() {
 	}
 
 	fmt.Println("Complete system backup completed successfully!")
+	fmt.Println()
 	fmt.Println("Your backup includes:")
 	fmt.Println("- SSH/GPG keys (encrypted)")
 	fmt.Println("- Dotfiles (.bashrc, .vimrc, .gitconfig, etc.)")
 	fmt.Println("- Package lists for reinstallation")
+	fmt.Println("- System automation files (SystemD services, timers, cronjobs)")
 }
 
 // system restoration from backup
@@ -97,10 +99,12 @@ func RunRestore() {
 	}
 
 	fmt.Println("\nSystem restoration completed!")
+	fmt.Println()
 	fmt.Println("Next steps:")
 	fmt.Println("1. Run the generated package installation script")
 	fmt.Println("2. Restart your shell or run 'source ~/.bashrc' (or ~/.zshrc)")
 	fmt.Println("3. Check that your SSH keys work: 'ssh-add -l'")
+	fmt.Println("4. Verify automation files were restored correctly")
 }
 
 // rest of the options

@@ -48,6 +48,7 @@ func (rm *RestoreManager) RestoreFromBackup(tarballPath string) error {
 	if err != nil {
 		fmt.Printf("Warning: Key restoration failed: %v\n", err)
 	}
+	fmt.Println() 
 
 	// 2. Restore dotfiles
 	fmt.Println("Restoring dotfiles...")
@@ -55,6 +56,7 @@ func (rm *RestoreManager) RestoreFromBackup(tarballPath string) error {
 	if err != nil {
 		fmt.Printf("Warning: Dotfile restoration failed: %v\n", err)
 	}
+	fmt.Println() 
 
 	// 3. Generate package installation script
 	fmt.Println("Generating package installation script...")
@@ -62,9 +64,27 @@ func (rm *RestoreManager) RestoreFromBackup(tarballPath string) error {
 	if err != nil {
 		fmt.Printf("Warning: Package script generation failed: %v\n", err)
 	}
+	fmt.Println()
 
 	fmt.Println("System restore completed successfully!")
-	fmt.Println("Note: Run the generated install script to restore packages:")
+	fmt.Println()
+	fmt.Printf("Restore Summary:\n")
+	fmt.Printf("  Keys restored: %d\n", len(rm.backupData.EncryptedKeys))
+	fmt.Printf("  Dotfiles restored: %d\n", len(rm.backupData.Dotfiles))
+	fmt.Printf("  Package categories: %d\n", len(rm.backupData.Packages))
+	
+	if rm.backupData.Automation != nil {
+		automationCount := len(rm.backupData.Automation.SystemDServices) + len(rm.backupData.Automation.SystemDTimers) + 
+			len(rm.backupData.Automation.UserCronjobs) + len(rm.backupData.Automation.SystemCronjobs)
+		if automationCount > 0 {
+			fmt.Printf("  Automation files: %d (%d services, %d timers, %d user cronjobs, %d system cronjobs)\n",
+				automationCount, len(rm.backupData.Automation.SystemDServices), len(rm.backupData.Automation.SystemDTimers),
+				len(rm.backupData.Automation.UserCronjobs), len(rm.backupData.Automation.SystemCronjobs))
+		}
+	}
+	
+	fmt.Println()
+	fmt.Println("Note: Run the generated install script to restore packages and automation:")
 	fmt.Println("  chmod +x dist/restored_packages_install.sh")
 	fmt.Println("  ./dist/restored_packages_install.sh")
 	
@@ -149,7 +169,11 @@ func (rm *RestoreManager) restoreKeys() error {
 		restoredCount++
 	}
 
-	fmt.Printf("Successfully restored %d keys\n", restoredCount)
+	if restoredCount > 0 {
+		fmt.Printf("Successfully restored %d keys\n", restoredCount)
+	} else {
+		fmt.Println("No keys were restored")
+	}
 	return nil
 }
 
@@ -219,7 +243,11 @@ func (rm *RestoreManager) restoreDotfiles(tarballPath string) error {
 		}
 	}
 
-	fmt.Printf("Successfully restored %d dotfiles\n", restoredCount)
+	if restoredCount > 0 {
+		fmt.Printf("Successfully restored %d dotfiles\n", restoredCount)
+	} else {
+		fmt.Println("No dotfiles were restored")
+	}
 	return nil
 }
 
@@ -232,7 +260,7 @@ func (rm *RestoreManager) generateInstallScript() error {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	return output.GenerateInstallScript(rm.backupData.BaseDistro, rm.backupData.Packages, scriptPath)
+	return output.GenerateInstallScript(rm.backupData.BaseDistro, rm.backupData.Packages, rm.backupData.Automation, scriptPath)
 }
 
 // decryptData decrypts base64 encoded data using AES-GCM

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mdgspace/sysreplicate/system/automation"
 	"github.com/mdgspace/sysreplicate/system/output"
 	"github.com/mdgspace/sysreplicate/system/utils"
 )
@@ -22,6 +23,7 @@ type UnifiedBackupData struct {
 	EncryptedKeys map[string]output.EncryptedKey `json:"encrypted_keys"`
 	Dotfiles      []output.Dotfile            `json:"dotfiles"`
 	Packages      map[string][]string         `json:"packages"`
+	Automation    *automation.AutomationData `json:"automation"`
 	EncryptionKey []byte                      `json:"encryption_key"`
 	Distro        string                      `json:"distro"`
 	BaseDistro    string                      `json:"base_distro"`
@@ -60,6 +62,17 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	// Detect distro and get packages
 	distro, baseDistro := utils.DetectDistro()
 	packages := utils.FetchPackages(baseDistro)
+	
+	fmt.Printf("Detected distro: %s (%s)\n", distro, baseDistro)
+	totalPackages := 0
+	for repo, pkgs := range packages {
+		if len(pkgs) > 0 {
+			fmt.Printf("  %s packages: %d\n", repo, len(pkgs))
+			totalPackages += len(pkgs)
+		}
+	}
+	fmt.Printf("  Total packages to restore: %d\n", totalPackages)
+	fmt.Println()
 
 	// Create unified backup data
 	backupData := &UnifiedBackupData{
@@ -82,6 +95,7 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	if err != nil {
 		fmt.Printf("Warning: Key backup failed: %v\n", err)
 	}
+	fmt.Println() 
 
 	// 2. Backup dotfiles
 	fmt.Println("Backing up dotfiles...")
@@ -89,8 +103,17 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	if err != nil {
 		fmt.Printf("Warning: Dotfile backup failed: %v\n", err)
 	}
+	fmt.Println() 
 
-	// 3. Create unified tarball
+	// 3. Backup automation files
+	fmt.Println("Backing up automation files...")
+	err = ubm.backupAutomation(backupData)
+	if err != nil {
+		fmt.Printf("Warning: Automation backup failed: %v\n", err)
+	}
+	fmt.Println() 
+
+	// 4. Create unified tarball
 	fmt.Println("Creating unified backup tarball...")
 	tarballPath := fmt.Sprintf("dist/unified-backup-%s.tar.gz",
 		time.Now().Format("2006-01-02-15-04-05"))
@@ -101,8 +124,19 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	}
 
 	fmt.Printf("Unified backup completed successfully: %s\n", tarballPath)
-	fmt.Printf("Backed up %d key files, %d dotfiles, and %d package categories\n", 
-		len(backupData.EncryptedKeys), len(backupData.Dotfiles), len(backupData.Packages))
+	fmt.Println()
+	fmt.Printf("Backup Summary:\n")
+	fmt.Printf("  Keys: %d files\n", len(backupData.EncryptedKeys))
+	fmt.Printf("  Dotfiles: %d files\n", len(backupData.Dotfiles))
+	fmt.Printf("  Packages: %d categories\n", len(backupData.Packages))
+	
+	if backupData.Automation != nil {
+		automationCount := len(backupData.Automation.SystemDServices) + len(backupData.Automation.SystemDTimers) + 
+			len(backupData.Automation.UserCronjobs) + len(backupData.Automation.SystemCronjobs)
+		fmt.Printf("  Automation: %d files (%d services, %d timers, %d user cronjobs, %d system cronjobs)\n",
+			automationCount, len(backupData.Automation.SystemDServices), len(backupData.Automation.SystemDTimers),
+			len(backupData.Automation.UserCronjobs), len(backupData.Automation.SystemCronjobs))
+	}
 	
 	return nil
 }
@@ -123,27 +157,39 @@ func (ubm *UnifiedBackupManager) backupKeys(customPaths []string, backupData *Un
 	allLocations := append(standardLocations, customLocations...)
 	
 	// encrypt and store keys
+	keyCount := 0
 	for _, location := range allLocations {
-		for _, filePath := range location.Files {
-			fileInfo, err := os.Stat(filePath)
-			if err != nil {
-				continue
-			}
+		if len(location.Files) > 0 {
+			fmt.Printf("  %s keys found:\n", location.Type)
+			for _, filePath := range location.Files {
+				fileInfo, err := os.Stat(filePath)
+				if err != nil {
+					continue
+				}
 
-			encryptedData, err := EncryptFile(filePath, ubm.config)
-			if err != nil {
-				fmt.Printf("Warning: Failed to encrypt %s: %v\n", filePath, err)
-				continue
-			}
+				encryptedData, err := EncryptFile(filePath, ubm.config)
+				if err != nil {
+					fmt.Printf("    Warning: Failed to encrypt %s: %v\n", filePath, err)
+					continue
+				}
 
-			keyID := filepath.Base(filePath) + "_" + strings.ReplaceAll(filePath, "/", "_")
-			backupData.EncryptedKeys[keyID] = output.EncryptedKey{
-				OriginalPath:  filePath,
-				KeyType:       location.Type,
-				EncryptedData: encryptedData,
-				Permissions:   uint32(fileInfo.Mode()),
+				fmt.Printf("    - %s\n", filePath)
+				keyID := filepath.Base(filePath) + "_" + strings.ReplaceAll(filePath, "/", "_")
+				backupData.EncryptedKeys[keyID] = output.EncryptedKey{
+					OriginalPath:  filePath,
+					KeyType:       location.Type,
+					EncryptedData: encryptedData,
+					Permissions:   uint32(fileInfo.Mode()),
+				}
+				keyCount++
 			}
 		}
+	}
+	
+	if keyCount == 0 {
+		fmt.Println("  No SSH/GPG keys found")
+	} else {
+		fmt.Printf("  Total keys backed up: %d\n", keyCount)
 	}
 	
 	return nil
@@ -156,9 +202,16 @@ func (ubm *UnifiedBackupManager) backupDotfiles(backupData *UnifiedBackupData) e
 		return fmt.Errorf("error scanning dotfiles: %w", err)
 	}
 
-	// Convert to output format
+	// Convert to output format and show details
 	outputFiles := make([]output.Dotfile, len(files))
+	dotfileCount := 0
+	
 	for i, file := range files {
+		if !file.IsDir && !file.IsBinary {
+			fmt.Printf("  - %s\n", file.Path)
+			dotfileCount++
+		}
+		
 		outputFiles[i] = output.Dotfile{
 			Path:     file.Path,
 			RealPath: file.RealPath,
@@ -169,7 +222,29 @@ func (ubm *UnifiedBackupManager) backupDotfiles(backupData *UnifiedBackupData) e
 		}
 	}
 
+	if dotfileCount == 0 {
+		fmt.Println("  No dotfiles found")
+	} else {
+		fmt.Printf("  Total dotfiles backed up: %d\n", dotfileCount)
+	}
+
 	backupData.Dotfiles = outputFiles
+	return nil
+}
+
+func (ubm *UnifiedBackupManager) backupAutomation(backupData *UnifiedBackupData) error {
+	am := automation.NewAutomationManager()
+	
+	data, err := am.DetectAutomation()
+	if err != nil {
+		return fmt.Errorf("failed to detect automation: %w", err)
+	}
+	
+	if err := am.ValidateAutomationData(data); err != nil {
+		return fmt.Errorf("invalid automation data: %w", err)
+	}
+	
+	backupData.Automation = data
 	return nil
 }
 
@@ -248,6 +323,14 @@ func (ubm *UnifiedBackupManager) createUnifiedTarball(backupData *UnifiedBackupD
 		
 		if err != nil {
 			fmt.Printf("Warning: Failed to add dotfile %s to tarball: %v\n", dotfile.Path, err)
+		}
+	}
+
+	if backupData.Automation != nil {
+		am := automation.NewAutomationManager()
+		err := am.BackupAutomation(backupData.Automation, tarWriter)
+		if err != nil {
+			fmt.Printf("Warning: Failed to add automation files to tarball: %v\n", err)
 		}
 	}
 
