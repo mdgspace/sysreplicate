@@ -32,17 +32,18 @@ func Run() {
 }
 
 // showMenu displays the main menu for Linux users
-// MUST BE CHANGED IN THE FUTURE
 func showMenu() {
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
 		fmt.Println("\n=== SysReplicate - Distro Hopping Tool ===")
-		fmt.Println("1. Generate package replication files")
-		fmt.Println("2. Backup SSH/GPG keys")
-		fmt.Println("3. Backup dotfiles")
-		fmt.Println("4. Exit")
-		fmt.Print("Choose an option (1-4): ")
+		fmt.Println("1. Create Complete System Backup (Recommended)")
+		fmt.Println("2. Restore System from Backup")
+		fmt.Println("3. Generate package replication files only")
+		fmt.Println("4. Backup SSH/GPG keys only")
+		fmt.Println("5. Backup dotfiles only")
+		fmt.Println("6. Exit")
+		fmt.Print("Choose an option (1-6): ")
 
 		if !scanner.Scan() {
 			break
@@ -52,16 +53,20 @@ func showMenu() {
 
 		switch choice {
 		case "1":
-			runPackageReplication()
+			RunUnifiedBackup()
 		case "2":
-			RunBackup()
+			RunRestore()
 		case "3":
-			RunDotfileBackup()
+			runPackageReplication()
 		case "4":
-			fmt.Println() //exit
+			RunBackup()
+		case "5":
+			RunDotfileBackup()
+		case "6":
+			fmt.Println("Goodbye Captain!")
 			return
 		default:
-			fmt.Println("Invalid choice. Please select 1, 2, or 3.")
+			fmt.Println("Invalid choice. Please select 1-6.")
 		}
 	}
 }
@@ -99,7 +104,7 @@ func runPackageReplication() {
 		return
 	}
 
-	if err := output.GenerateInstallScript(baseDistro, packages, scriptOutputPath); err != nil {
+	if err := output.GenerateInstallScript(baseDistro, packages, nil, scriptOutputPath); err != nil {
 		log.Println("Error generating install script:", err)
 	} else {
 		fmt.Println("Script generated successfully at:", scriptOutputPath)
