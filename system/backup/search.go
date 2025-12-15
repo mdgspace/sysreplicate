@@ -98,7 +98,7 @@ func isKeyFile(path string, info os.FileInfo) bool {
         }
     }
     
-    // cgeck GPG
+    // check GPG
     for _, pattern := range domain.GpgPatterns {
         if strings.Contains(name, pattern) {
             return true
