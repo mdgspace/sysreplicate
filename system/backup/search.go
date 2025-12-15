@@ -28,7 +28,7 @@ func searchStandardLocations() ([]KeyLocation, error) {
     }
 
     for _, location := range domain.StandardKeyLocations {
-        // reeplace ~operator with actual home directory
+        // replace ~operator with actual home directory
         fullPath := strings.Replace(location, "~", homeDir, 1)
         
         if _, err := os.Stat(fullPath); os.IsNotExist(err) {
