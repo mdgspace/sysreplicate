@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/mdgspace/sysreplicate/internal/domain"
 	"github.com/mdgspace/sysreplicate/system/backup"
 )
 
@@ -133,17 +134,14 @@ func RunDotfileBackup() {
 	// Create a backup manager
 	manager := backup.NewDotfileBackupManager()
 
-	// Output path
-	outputPath := "dist/dotfile-backup.tar.gz"
-
 	// Ensure "dist" directory exists
-	if err := os.MkdirAll("dist", os.ModePerm); err != nil {
+	if err := os.MkdirAll(domain.OutputScriptsDirPath, os.ModePerm); err != nil {
 		fmt.Printf("Failed to create output directory: %v\n", err)
 		return
 	}
 
 	// Run the backup
-	err := manager.CreateDotfileBackup(outputPath)
+	err := manager.CreateDotfileBackup(domain.DotfileOutputPath)
 	if err != nil {
 		fmt.Printf("Backup failed: %v\n", err)
 		return

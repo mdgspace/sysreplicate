@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mdgspace/sysreplicate/internal/domain"
 	"github.com/mdgspace/sysreplicate/system/output"
 )
 
@@ -253,7 +254,7 @@ func (rm *RestoreManager) restoreDotfiles(tarballPath string) error {
 
 // generateInstallScript creates a script to reinstall packages
 func (rm *RestoreManager) generateInstallScript() error {
-	scriptPath := "dist/restored_packages_install.sh"
+	scriptPath := domain.RestoreScriptPath
 	
 	// dir check
 	if err := os.MkdirAll(filepath.Dir(scriptPath), 0755); err != nil {
