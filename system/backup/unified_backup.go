@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mdgspace/sysreplicate/internal/domain"
 	"github.com/mdgspace/sysreplicate/system/automation"
 	"github.com/mdgspace/sysreplicate/system/output"
 	"github.com/mdgspace/sysreplicate/system/utils"
@@ -115,8 +116,9 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 
 	// 4. Create unified tarball
 	fmt.Println("Creating unified backup tarball...")
-	tarballPath := fmt.Sprintf("dist/unified-backup-%s.tar.gz",
-		time.Now().Format("2006-01-02-15-04-05"))
+
+	var tarballPath = fmt.Sprintf(domain.UnifiedTarballBasePath,
+	time.Now().Format("2006-01-02-15-04-05"))
 	
 	err = ubm.createUnifiedTarball(backupData, tarballPath)
 	if err != nil {

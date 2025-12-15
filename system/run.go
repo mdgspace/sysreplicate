@@ -10,6 +10,7 @@ import (
 
 	"github.com/mdgspace/sysreplicate/system/output"
 	"github.com/mdgspace/sysreplicate/system/utils"
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 // Run is the entry point for the system orchestrator.
@@ -89,24 +90,24 @@ func runPackageReplication() {
 		return
 	}
 
-	if err := os.MkdirAll(outputSysDir, 0744); err != nil {
+	if err := os.MkdirAll(domain.OutputSysDirPath, 0744); err != nil {
 		log.Println("Error creating sys output directory:", err)
 		return
 	}
 
-	if err := os.WriteFile(jsonOutputPath, jsonObj, 0644); err != nil {
+	if err := os.WriteFile(domain.JsonOutputPath, jsonObj, 0644); err != nil {
 		log.Println("Error writing JSON output:", err)
 		return
 	}
 
-	if err := os.MkdirAll(outputScriptsDir, 0744); err != nil {
+	if err := os.MkdirAll(domain.OutputScriptsDirPath, 0744); err != nil {
 		log.Println("Error creating scripts output directory:", err)
 		return
 	}
 
-	if err := output.GenerateInstallScript(baseDistro, packages, nil, scriptOutputPath); err != nil {
+	if err := output.GenerateInstallScript(baseDistro, packages, nil, domain.ScriptOutputPath); err != nil {
 		log.Println("Error generating install script:", err)
 	} else {
-		fmt.Println("Script generated successfully at:", scriptOutputPath)
+		fmt.Println("Script generated successfully at:", domain.ScriptOutputPath)
 	}
 }

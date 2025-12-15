@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/mdgspace/sysreplicate/system/automation"
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 // generateInstallScript creates a shell script to install all packages for the given distro.
@@ -24,13 +25,13 @@ func GenerateInstallScript(baseDistro string, packages map[string][]string, auto
 	var officialInstallCmd string
 	switch baseDistro {
 	case "debian":
-		officialInstallCmd = "sudo apt-get install -y"
+		officialInstallCmd = domain.DebianInstallCmd
 	case "arch":
-		officialInstallCmd = "sudo pacman -S --noconfirm"
+		officialInstallCmd = domain.ArchInstallCmd
 	case "rhel", "fedora":
-		officialInstallCmd = "sudo dnf install -y"
+		officialInstallCmd = domain.RhelInstallCmd
 	case "void":
-		officialInstallCmd = "sudo xbps-install -y"
+		officialInstallCmd = domain.VoidInstallCmd
 	default:
 		_, _ = fmt.Fprintln(f, "echo 'Unsupported distro for script generation.'")
 		return nil

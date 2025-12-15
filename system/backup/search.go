@@ -4,13 +4,9 @@ import (
     "os"
     "path/filepath"
     "strings"
-)
 
-// common location of keys - more can be added here
-var StandardKeyLocations = []string{
-    "~/.ssh/",
-    "~/.gnupg/",
-}
+    "github.com/mdgspace/sysreplicate/internal/domain"
+)
 
 // any saved keylcoation
 type KeyLocation struct {
@@ -31,8 +27,8 @@ func searchStandardLocations() ([]KeyLocation, error) {
         return nil, err
     }
 
-    for _, location := range StandardKeyLocations {
-        // reeplace ~operator with actual home directory
+    for _, location := range domain.StandardKeyLocations {
+        // replace ~operator with actual home directory
         fullPath := strings.Replace(location, "~", homeDir, 1)
         
         if _, err := os.Stat(fullPath); os.IsNotExist(err) {
@@ -95,27 +91,15 @@ func discoverKeyFiles(dirPath string) ([]string, error) {
 func isKeyFile(path string, info os.FileInfo) bool {
     name := info.Name()
     
-    // SSH key patterns
-    sshPatterns := []string{
-        "id_rsa", "id_dsa", "id_ecdsa", "id_ed25519",
-        "authorized_keys", "known_hosts", "config",
-    }
-    
-    // GPG key patterns
-    gpgPatterns := []string{
-        "pubring.gpg", "secring.gpg", "trustdb.gpg",
-        "gpg.conf", "gpg-agent.conf",
-    }
-    
     // check SSH 
-    for _, pattern := range sshPatterns {
+    for _, pattern := range domain.SshPatterns {
         if strings.Contains(name, pattern) {
             return true
         }
     }
     
-    // cgeck GPG
-    for _, pattern := range gpgPatterns {
+    // check GPG
+    for _, pattern := range domain.GpgPatterns {
         if strings.Contains(name, pattern) {
             return true
         }

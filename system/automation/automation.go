@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 type AutomationData struct {
@@ -125,14 +127,8 @@ func (am *AutomationManager) isCustomSystemDUnit(filePath string) bool {
 	if err != nil {
 		return false
 	}
-	// Package-managed directories that we want to exclude
-	packageManagedDirs := []string{
-		"/usr/lib/systemd/system/",
-		"/lib/systemd/system/",
-		"/usr/share/systemd/",
-	}
 	
-	for _, dir := range packageManagedDirs {
+	for _, dir := range domain.PackageManagedDirs {
 		if strings.HasPrefix(target, dir) {
 			return false
 		}

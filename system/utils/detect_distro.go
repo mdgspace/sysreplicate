@@ -3,11 +3,12 @@ package utils
 import (
 	"os"
 	"strings"
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 // DetectDistro returns the distro and base distro.
 func DetectDistro() (string, string) {
-	data, err := os.ReadFile("/etc/os-release")
+	data, err := os.ReadFile(domain.OsReleasePath)
 	if err != nil {
 		return "unknown", "unknown"
 	}

@@ -4,19 +4,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
 
-var DotfilePaths = []string{
-	"~/.bashrc",
-	"~/.zshrc",
-	"~/.vimrc",
-	"~/.config",
-	"~/.bash_history",
-	"~/.zsh_history",
-	"~/.gitconfig",
-	"~/.profile",
-	"~/.npmrc",
-}
+	"github.com/mdgspace/sysreplicate/internal/domain"
+)
 
 type Dotfile struct {
 	Path     string
@@ -53,7 +43,7 @@ func ScanDotfiles() ([]Dotfile, error) {
 	var results []Dotfile
 	home, _ := os.UserHomeDir()
 
-	for _, raw := range DotfilePaths {
+	for _, raw := range domain.DotfilePaths {
 		full := expandHome(raw)
 
 		info, err := os.Stat(full)
