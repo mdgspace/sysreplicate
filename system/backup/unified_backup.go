@@ -116,13 +116,16 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 
 	// 4. Create unified tarball
 	fmt.Println("Creating unified backup tarball...")
+
+	var tarballPath = fmt.Sprintf(domain.UnifiedTarballBasePath,
+	time.Now().Format("2006-01-02-15-04-05"))
 	
-	err = ubm.createUnifiedTarball(backupData, domain.UnifiedTarballPath)
+	err = ubm.createUnifiedTarball(backupData, tarballPath)
 	if err != nil {
 		return fmt.Errorf("failed to create unified tarball: %w", err)
 	}
 
-	fmt.Printf("Unified backup completed successfully: %s\n", domain.UnifiedTarballPath)
+	fmt.Printf("Unified backup completed successfully: %s\n", tarballPath)
 	fmt.Println()
 	fmt.Printf("Backup Summary:\n")
 	fmt.Printf("  Keys: %d files\n", len(backupData.EncryptedKeys))

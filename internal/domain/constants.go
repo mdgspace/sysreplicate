@@ -17,6 +17,7 @@ const (
 	UserCronPathTemplatePath = "/var/spool/cron/crontabs/%s"
 	SystemCrontabDefaultPath = "/etc/crontab"
 	CronDDirPath             = "/etc/cron.d"
+	UnifiedTarballBasePath   = "dist/unified-backup-%s.tar.gz"
 
 	DebianInstallCmd = "sudo apt-get install -y"
 	ArchInstallCmd   = "sudo pacman -S --noconfirm"
@@ -69,5 +70,3 @@ var PackageManagedDirs = []string{
 	"/usr/share/systemd/",
 }
 
-var UnifiedTarballPath = fmt.Sprintf("dist/unified-backup-%s.tar.gz",
-	time.Now().Format("2006-01-02-15-04-05"))
