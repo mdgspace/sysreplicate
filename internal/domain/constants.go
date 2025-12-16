@@ -1,9 +1,9 @@
 package domain
 
-import (
-	"fmt"
-	"time"
-)
+// import (
+// 	"fmt"
+// 	"time"
+// )
 
 const (
 	OutputSysDirPath         = "dist/sys-info"

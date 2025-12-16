@@ -102,6 +102,12 @@ Creates backup of configuration files:
 sysreplicate/
 ├── main.go                    # Application entry point
 ├── go.mod                     # Go module definition
+├── internal/
+│   ├── domain/
+│   │   └── constants.go
+│   └── platform/
+│       ├── distro.go
+│       └── packages.go
 ├── system/                    # Core system package
 │   ├── run.go                 # Main menu and orchestration
 │   ├── settings.go            # Configuration constants
@@ -118,14 +124,10 @@ sysreplicate/
 │   │   ├── automation.go      # SystemD and cron detection
 │   │   ├── backup.go          # Automation backup
 │   │   └── detect.go          # Automation detection
-│   ├── output/                # Output generation
-│   │   ├── json.go            # JSON metadata generation
-│   │   ├── script.go          # Installation script generation
-│   │   └── tarball.go         # Tarball creation
-│   └── utils/                 # Utility functions
-│       ├── detect_distro.go   # Distribution detection
-│       ├── fetch_packages.go  # Package list fetching
-│       └── verify_path.go     # Path validation
+│   └── output/                # Output generation
+│       ├── json.go            # JSON metadata generation
+│       ├── script.go          # Installation script generation
+│       └── tarball.go         # Tarball creation
 └── dist/                      # Output directory
     ├── unified-backup-*.tar.gz # Complete system backups
     ├── key-backup-*.tar.gz    # Key-only backups
