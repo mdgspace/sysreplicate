@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/mdgspace/sysreplicate/system/output"
-	"github.com/mdgspace/sysreplicate/system/utils"
+	"github.com/mdgspace/sysreplicate/internal/platform"
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
@@ -74,7 +74,7 @@ func showMenu() {
 
 // this handles the original package replication functionality
 func runPackageReplication() {
-	distro, baseDistro := utils.DetectDistro()
+	distro, baseDistro := platform.DetectDistro()
 	if distro == "unknown" && baseDistro == "unknown" {
 		log.Println("Failed to fetch the details of your distro")
 		return
@@ -83,7 +83,7 @@ func runPackageReplication() {
 	fmt.Println("Distribution:", distro)
 	fmt.Println("Built On:", baseDistro)
 
-	packages := utils.FetchPackages(baseDistro)
+	packages := platform.FetchPackages(baseDistro)
 	jsonObj, err := output.BuildSystemJSON("linux", distro, baseDistro, packages)
 	if err != nil {
 		log.Println("Error marshalling JSON:", err)

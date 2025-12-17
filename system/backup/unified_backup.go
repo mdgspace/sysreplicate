@@ -14,7 +14,7 @@ import (
 	"github.com/mdgspace/sysreplicate/internal/domain"
 	"github.com/mdgspace/sysreplicate/system/automation"
 	"github.com/mdgspace/sysreplicate/system/output"
-	"github.com/mdgspace/sysreplicate/system/utils"
+	"github.com/mdgspace/sysreplicate/internal/platform"
 )
 
 // all backup information in one structure
@@ -61,8 +61,8 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	}
 
 	// Detect distro and get packages
-	distro, baseDistro := utils.DetectDistro()
-	packages := utils.FetchPackages(baseDistro)
+	distro, baseDistro := platform.DetectDistro()
+	packages := platform.FetchPackages(baseDistro)
 	
 	fmt.Printf("Detected distro: %s (%s)\n", distro, baseDistro)
 	totalPackages := 0
