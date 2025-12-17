@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/mdgspace/sysreplicate/internal/domain"
-	"github.com/mdgspace/sysreplicate/system/backup"
+	"github.com/mdgspace/sysreplicate/internal/core/backup"
 )
 
 // handle backup integration
