@@ -1,10 +1,5 @@
 package domain
 
-// import (
-// 	"fmt"
-// 	"time"
-// )
-
 const (
 	OutputSysDirPath         = "dist/sys-info"
 	OutputScriptsDirPath     = "dist"
@@ -14,7 +9,7 @@ const (
 	OsReleasePath            = "/etc/os-release"
 	RestoreScriptPath        = "dist/restored_packages_install.sh"
 	SystemdDirPath           = "/etc/systemd/system"
-	UserCronPathTemplatePath = "/var/spool/cron/crontabs/%s"
+	UserCronTemplatePath = "/var/spool/cron/crontabs/%s"
 	SystemCrontabDefaultPath = "/etc/crontab"
 	CronDDirPath             = "/etc/cron.d"
 	UnifiedTarballBasePath   = "dist/unified-backup-%s.tar.gz"

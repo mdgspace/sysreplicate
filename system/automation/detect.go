@@ -71,7 +71,7 @@ func (am *AutomationManager) detectCronjobs() ([]Cronjob, []Cronjob, error) {
 	var userCronjobs []Cronjob
 	var systemCronjobs []Cronjob
 
-	userCronPath := fmt.Sprintf(domain.UserCronPathTemplatePath, am.username)
+	userCronPath := fmt.Sprintf(domain.UserCronTemplatePath, am.username)
 	if content, err := am.readFileContent(userCronPath); err == nil {
 		lines := strings.Split(content, "\n")
 		var filteredLines []string
