@@ -9,9 +9,9 @@ import (
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
-func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit, error) {
-	var services []SystemDUnit
-	var timers []SystemDUnit
+func (am *AutomationManager) detectSystemDUnits() ([]domain.SystemDUnit, []domain.SystemDUnit, error) {
+	var services []domain.SystemDUnit
+	var timers []domain.SystemDUnit
 
 	if _, err := os.Stat(domain.SystemdDirPath); os.IsNotExist(err) {
 		fmt.Printf("SystemD directory %s does not exist, skipping SystemD detection\n", domain.SystemdDirPath)
@@ -38,7 +38,7 @@ func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit,
 		}
 		isEnabled, isActive := am.getSystemDUnitStatus(unitName)
 
-		unit := SystemDUnit{
+		unit := domain.SystemDUnit{
 			Name:      unitName,
 			Path:      path,
 			Content:   content,
@@ -67,9 +67,9 @@ func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit,
 }
 
 // ///detectCronjobs scans for cron job files
-func (am *AutomationManager) detectCronjobs() ([]Cronjob, []Cronjob, error) {
-	var userCronjobs []Cronjob
-	var systemCronjobs []Cronjob
+func (am *AutomationManager) detectCronjobs() ([]domain.Cronjob, []domain.Cronjob, error) {
+	var userCronjobs []domain.Cronjob
+	var systemCronjobs []domain.Cronjob
 
 	userCronPath := fmt.Sprintf(domain.UserCronTemplatePath, am.username)
 	if content, err := am.readFileContent(userCronPath); err == nil {
@@ -83,7 +83,7 @@ func (am *AutomationManager) detectCronjobs() ([]Cronjob, []Cronjob, error) {
 		}
 
 		if len(filteredLines) > 0 {
-			userCronjobs = append(userCronjobs, Cronjob{
+			userCronjobs = append(userCronjobs, domain.Cronjob{
 				Path:    userCronPath,
 				Content: content,
 				Type:    "user",
@@ -122,7 +122,7 @@ func (am *AutomationManager) detectCronjobs() ([]Cronjob, []Cronjob, error) {
 					cronType = "cron_d"
 				}
 
-				systemCronjobs = append(systemCronjobs, Cronjob{
+				systemCronjobs = append(systemCronjobs, domain.Cronjob{
 					Path:    cronPath,
 					Content: content,
 					Type:    cronType,
@@ -139,7 +139,7 @@ func (am *AutomationManager) dirExists(path string) bool {
 	return err == nil && info.IsDir()
 }
 
-func (am *AutomationManager) GetAutomationSummary(data *AutomationData) string {
+func (am *AutomationManager) GetAutomationSummary(data *domain.AutomationData) string {
 	var summary strings.Builder
 
 	summary.WriteString("Automation Detection Summary:\n")
