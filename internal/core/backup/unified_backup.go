@@ -13,16 +13,15 @@ import (
 
 	"github.com/mdgspace/sysreplicate/internal/domain"
 	"github.com/mdgspace/sysreplicate/internal/core/automation"
-	"github.com/mdgspace/sysreplicate/system/output"
 	"github.com/mdgspace/sysreplicate/internal/platform"
 )
 
 // all backup information in one structure
 type UnifiedBackupData struct {
 	Timestamp     time.Time                   `json:"timestamp"`
-	SystemInfo    output.SystemInfo           `json:"system_info"`
-	EncryptedKeys map[string]output.EncryptedKey `json:"encrypted_keys"`
-	Dotfiles      []output.Dotfile            `json:"dotfiles"`
+	SystemInfo    domain.SystemInfo           `json:"system_info"`
+	EncryptedKeys map[string]domain.EncryptedKey `json:"encrypted_keys"`
+	Dotfiles      []domain.Dotfile            `json:"dotfiles"`
 	Packages      map[string][]string         `json:"packages"`
 	Automation    *domain.AutomationData `json:"automation"`
 	EncryptionKey []byte                      `json:"encryption_key"`
@@ -78,12 +77,12 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	// Create unified backup data
 	backupData := &UnifiedBackupData{
 		Timestamp:     time.Now(),
-		SystemInfo: output.SystemInfo{
+		SystemInfo: domain.SystemInfo{
 			Hostname: hostname,
 			Username: username,
 			OS:       "linux",
 		},
-		EncryptedKeys: make(map[string]output.EncryptedKey),
+		EncryptedKeys: make(map[string]domain.EncryptedKey),
 		EncryptionKey: key,
 		Packages:      packages,
 		Distro:        distro,
@@ -177,7 +176,7 @@ func (ubm *UnifiedBackupManager) backupKeys(customPaths []string, backupData *Un
 
 				fmt.Printf("    - %s\n", filePath)
 				keyID := filepath.Base(filePath) + "_" + strings.ReplaceAll(filePath, "/", "_")
-				backupData.EncryptedKeys[keyID] = output.EncryptedKey{
+				backupData.EncryptedKeys[keyID] = domain.EncryptedKey{
 					OriginalPath:  filePath,
 					KeyType:       location.Type,
 					EncryptedData: encryptedData,
@@ -205,7 +204,7 @@ func (ubm *UnifiedBackupManager) backupDotfiles(backupData *UnifiedBackupData) e
 	}
 
 	// Convert to output format and show details
-	outputFiles := make([]output.Dotfile, len(files))
+	outputFiles := make([]domain.Dotfile, len(files))
 	dotfileCount := 0
 	
 	for i, file := range files {
@@ -214,7 +213,7 @@ func (ubm *UnifiedBackupManager) backupDotfiles(backupData *UnifiedBackupData) e
 			dotfileCount++
 		}
 		
-		outputFiles[i] = output.Dotfile{
+		outputFiles[i] = domain.Dotfile{
 			Path:     file.Path,
 			RealPath: file.RealPath,
 			IsDir:    file.IsDir,

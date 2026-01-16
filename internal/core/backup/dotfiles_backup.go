@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 	"github.com/mdgspace/sysreplicate/system/output"
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 type BackupMetadata struct {
@@ -29,9 +30,9 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 	hostname, _ := os.Hostname()
 
 	// Convert []Dotfile to []output.Dotfile
-    outputFiles := make([]output.Dotfile, len(files))
+    outputFiles := make([]domain.Dotfile, len(files))
     for i, file := range files {
-        outputFiles[i] = output.Dotfile{
+        outputFiles[i] = domain.Dotfile{
             Path:     file.Path,
             RealPath: file.RealPath,
             IsDir:    file.IsDir,
@@ -44,7 +45,7 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 
 	// Create backup metadata
 	// struct from output
-	meta := &output.BackupMetadata{
+	meta := &domain.BackupMetadata{
 		Timestamp: time.Now(),
 		Hostname:  hostname,
 		Files:     outputFiles,

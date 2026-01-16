@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mdgspace/sysreplicate/system/output"
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 // backup and restore operations
@@ -52,10 +53,10 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 	}
 
 	//create backup data
-	backupData := &output.BackupData{
+	backupData := &domain.BackupData{
 		Timestamp:     time.Now(),
 		SystemInfo:    bm.getSystemInfo(),
-		EncryptedKeys: make(map[string]output.EncryptedKey),
+		EncryptedKeys: make(map[string]domain.EncryptedKey),
 		EncryptionKey: key, // Store the key in backup data
 	}
 
@@ -84,7 +85,7 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 }
 
 // processLocation processes a single key location
-func (bm *BackupManager) processLocation(location KeyLocation, backupData *output.BackupData) error {
+func (bm *BackupManager) processLocation(location KeyLocation, backupData *domain.BackupData) error {
 	for _, filePath := range location.Files {
 		//get file info for permissions
 		fileInfo, err := os.Stat(filePath)
@@ -100,7 +101,7 @@ func (bm *BackupManager) processLocation(location KeyLocation, backupData *outpu
 
 		// store encrypted key
 		keyID := filepath.Base(filePath) + "_" + strings.ReplaceAll(filePath, "/", "_")
-		backupData.EncryptedKeys[keyID] = output.EncryptedKey{
+		backupData.EncryptedKeys[keyID] = domain.EncryptedKey{
 			OriginalPath:  filePath,
 			KeyType:       location.Type,
 			EncryptedData: encryptedData,
@@ -161,13 +162,13 @@ func (bm *BackupManager) processCustomPaths(customPaths []string) []KeyLocation 
 }
 
 // collect basic system information
-func (bm *BackupManager) getSystemInfo() output.SystemInfo {
+func (bm *BackupManager) getSystemInfo() domain.SystemInfo {
 	hostname, _ := os.Hostname()
 	username := os.Getenv("USER")
 	if username == "" {
 		username = os.Getenv("USERNAME")
 	}
-	return output.SystemInfo{
+	return domain.SystemInfo{
 		Hostname: hostname,
 		Username: username,
 		OS:       "linux",
