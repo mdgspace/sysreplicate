@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
 	"github.com/mdgspace/sysreplicate/internal/domain"
-	"github.com/mdgspace/sysreplicate/system/output"
 )
 
 type RestoreManager struct {
@@ -261,7 +261,7 @@ func (rm *RestoreManager) generateInstallScript() error {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	return output.GenerateInstallScript(rm.backupData.BaseDistro, rm.backupData.Packages, rm.backupData.Automation, scriptPath)
+	return generator.GenerateInstallScript(rm.backupData.BaseDistro, rm.backupData.Packages, rm.backupData.Automation, scriptPath)
 }
 
 // decryptData decrypts base64 encoded data using AES-GCM

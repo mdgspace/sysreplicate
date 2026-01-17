@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"github.com/mdgspace/sysreplicate/system/output"
+
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
@@ -51,7 +52,7 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 		Files:     outputFiles,
 	}
 
-    if err := output.CreateDotfilesBackupTarball(meta, outputTar); err != nil {
+    if err := generator.CreateDotfilesBackupTarball(meta, outputTar); err != nil {
         return fmt.Errorf("failed to create backup tarball: %w", err)
     }
 

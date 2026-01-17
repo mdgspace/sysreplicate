@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mdgspace/sysreplicate/system/output"
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
@@ -74,7 +74,7 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 	fmt.Println("Creating backup tarball...")
 	tarballPath := fmt.Sprintf("dist/key-backup-%s.tar.gz",
 		time.Now().Format("2006-01-02-15-04-05"))
-	err = output.CreateBackupTarball(backupData, tarballPath)
+	err = generator.CreateBackupTarball(backupData, tarballPath)
 	if err != nil {
 		return fmt.Errorf("failed to create tarball: %w", err)
 	}

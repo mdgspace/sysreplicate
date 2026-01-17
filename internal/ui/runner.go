@@ -8,9 +8,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/mdgspace/sysreplicate/system/output"
-	"github.com/mdgspace/sysreplicate/internal/platform"
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
 	"github.com/mdgspace/sysreplicate/internal/domain"
+	"github.com/mdgspace/sysreplicate/internal/platform"
 )
 
 // Run is the entry point for the system orchestrator.
@@ -84,7 +84,7 @@ func runPackageReplication() {
 	fmt.Println("Built On:", baseDistro)
 
 	packages := platform.FetchPackages(baseDistro)
-	jsonObj, err := output.BuildSystemJSON("linux", distro, baseDistro, packages)
+	jsonObj, err := generator.GenerateMetadata("linux", distro, baseDistro, packages)
 	if err != nil {
 		log.Println("Error marshalling JSON:", err)
 		return
@@ -105,7 +105,7 @@ func runPackageReplication() {
 		return
 	}
 
-	if err := output.GenerateInstallScript(baseDistro, packages, nil, domain.ScriptOutputPath); err != nil {
+	if err := generator.GenerateInstallScript(baseDistro, packages, nil, domain.ScriptOutputPath); err != nil {
 		log.Println("Error generating install script:", err)
 	} else {
 		fmt.Println("Script generated successfully at:", domain.ScriptOutputPath)
