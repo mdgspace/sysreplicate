@@ -30,7 +30,7 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 
 	hostname, _ := os.Hostname()
 
-	// Convert []Dotfile to []output.Dotfile
+	// Convert []Dotfile to []domain.Dotfile
     outputFiles := make([]domain.Dotfile, len(files))
     for i, file := range files {
         outputFiles[i] = domain.Dotfile{
