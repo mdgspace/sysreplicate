@@ -1,12 +1,9 @@
 package ui
 
 import (
-	// "bufio"
-	// "fmt"
 	"log"
 	"os"
 	"runtime"
-	// "strings"
 
 	"github.com/mdgspace/sysreplicate/internal/core/generator"
 	"github.com/mdgspace/sysreplicate/internal/domain"
@@ -14,11 +11,12 @@ import (
 	"github.com/mdgspace/sysreplicate/internal/tui"
 )
 
-var string_list = []string{"1. Create Complete System Backup (Recommended)",
-"2. Restore System from Backup",
-"3. Generate package replication files only",
-"4. Backup SSH/GPG keys only",
-"5. Backup dotfiles only",
+var string_list = []string{
+	"Create Complete System Backup (Recommended)",
+	"Restore System from Backup",
+	"Generate package replication files only",
+	"Backup SSH/GPG keys only",
+	"Backup dotfiles only",
 }
 
 // Run is the entry point for the system orchestrator.
