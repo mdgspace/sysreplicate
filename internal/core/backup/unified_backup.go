@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/mdgspace/sysreplicate/internal/domain"
-	"github.com/mdgspace/sysreplicate/system/automation"
+	"github.com/mdgspace/sysreplicate/internal/core/automation"
 	"github.com/mdgspace/sysreplicate/system/output"
 	"github.com/mdgspace/sysreplicate/internal/platform"
 )
@@ -24,7 +24,7 @@ type UnifiedBackupData struct {
 	EncryptedKeys map[string]output.EncryptedKey `json:"encrypted_keys"`
 	Dotfiles      []output.Dotfile            `json:"dotfiles"`
 	Packages      map[string][]string         `json:"packages"`
-	Automation    *automation.AutomationData `json:"automation"`
+	Automation    *domain.AutomationData `json:"automation"`
 	EncryptionKey []byte                      `json:"encryption_key"`
 	Distro        string                      `json:"distro"`
 	BaseDistro    string                      `json:"base_distro"`

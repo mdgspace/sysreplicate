@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mdgspace/sysreplicate/system/automation"
+	"github.com/mdgspace/sysreplicate/internal/core/automation"
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 // generateInstallScript creates a shell script to install all packages for the given distro.
 // Returns an error if the script cannot be created or written.
-func GenerateInstallScript(baseDistro string, packages map[string][]string, automationData *automation.AutomationData, scriptPath string) error {
+func GenerateInstallScript(baseDistro string, packages map[string][]string, automationData *domain.AutomationData, scriptPath string) error {
 	f, err := os.Create(scriptPath)
 	if err != nil {
 		return err
@@ -117,13 +117,13 @@ func GenerateInstallScript(baseDistro string, packages map[string][]string, auto
 	if automationData != nil {
 		am := automation.NewAutomationManager()
 		automationCommands := am.GenerateRestorationCommands(automationData)
-		
+
 		if len(automationCommands) > 0 {
 			_, err = fmt.Fprintln(f, "\necho 'Restoring automation files...'")
 			if err != nil {
 				return err
 			}
-			
+
 			for _, cmd := range automationCommands {
 				_, err = fmt.Fprintf(f, "%s\n", cmd)
 				if err != nil {
