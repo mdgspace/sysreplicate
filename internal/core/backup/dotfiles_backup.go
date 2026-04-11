@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"github.com/mdgspace/sysreplicate/system/output"
+
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
+	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 type BackupMetadata struct {
@@ -28,10 +30,10 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 
 	hostname, _ := os.Hostname()
 
-	// Convert []Dotfile to []output.Dotfile
-    outputFiles := make([]output.Dotfile, len(files))
+	// Convert []Dotfile to []domain.Dotfile
+    outputFiles := make([]domain.Dotfile, len(files))
     for i, file := range files {
-        outputFiles[i] = output.Dotfile{
+        outputFiles[i] = domain.Dotfile{
             Path:     file.Path,
             RealPath: file.RealPath,
             IsDir:    file.IsDir,
@@ -44,13 +46,13 @@ func (db *DotfileBackupManager) CreateDotfileBackup(outputTar string) error {
 
 	// Create backup metadata
 	// struct from output
-	meta := &output.BackupMetadata{
+	meta := &domain.BackupMetadata{
 		Timestamp: time.Now(),
 		Hostname:  hostname,
 		Files:     outputFiles,
 	}
 
-    if err := output.CreateDotfilesBackupTarball(meta, outputTar); err != nil {
+    if err := generator.CreateDotfilesBackupTarball(meta, outputTar); err != nil {
         return fmt.Errorf("failed to create backup tarball: %w", err)
     }
 

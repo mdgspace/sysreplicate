@@ -1,75 +1,67 @@
 package ui
 
 import (
-	"bufio"
-	"fmt"
+	// "bufio"
+	// "fmt"
 	"log"
 	"os"
 	"runtime"
-	"strings"
+	// "strings"
 
-	"github.com/mdgspace/sysreplicate/system/output"
-	"github.com/mdgspace/sysreplicate/internal/platform"
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
 	"github.com/mdgspace/sysreplicate/internal/domain"
+	"github.com/mdgspace/sysreplicate/internal/platform"
+	"github.com/mdgspace/sysreplicate/internal/tui"
 )
+
+var string_list = []string{"1. Create Complete System Backup (Recommended)",
+"2. Restore System from Backup",
+"3. Generate package replication files only",
+"4. Backup SSH/GPG keys only",
+"5. Backup dotfiles only",
+}
 
 // Run is the entry point for the system orchestrator.
 func Run() {
 	osType := runtime.GOOS
-	fmt.Println("Detected OS Type:", osType)
+	tui.PublicPrint([]string{"Detected OS Type:", osType})
 
 	switch osType {
 	case "darwin":
-		fmt.Println("MacOS is not supported")
+		tui.PublicPrint([]string{"MacOS is not supported"})
 		return
 	case "windows":
-		fmt.Println("Windows is not supported")
+		tui.PublicPrint([]string{"Windows is not supported"})
 		return
 	case "linux":
+		// tui.PublicOptions(string_list)
 		showMenu() ////main menu component
 	default:
-		fmt.Println("OS not supported")
+		tui.PublicPrint([]string{"OS not supported"})
 	}
 }
 
 // showMenu displays the main menu for Linux users
 func showMenu() {
-	scanner := bufio.NewScanner(os.Stdin)
-
-	for {
-		fmt.Println("\n=== SysReplicate - Distro Hopping Tool ===")
-		fmt.Println("1. Create Complete System Backup (Recommended)")
-		fmt.Println("2. Restore System from Backup")
-		fmt.Println("3. Generate package replication files only")
-		fmt.Println("4. Backup SSH/GPG keys only")
-		fmt.Println("5. Backup dotfiles only")
-		fmt.Println("6. Exit")
-		fmt.Print("Choose an option (1-6): ")
-
-		if !scanner.Scan() {
-			break
-		}
-
-		choice := strings.TrimSpace(scanner.Text())
-
+		choice := tui.PublicOptions(string_list)
 		switch choice {
-		case "1":
+		case 1:
 			RunUnifiedBackup()
-		case "2":
+		case 2:
 			RunRestore()
-		case "3":
+		case 3:
 			runPackageReplication()
-		case "4":
+		case 4:
 			RunBackup()
-		case "5":
+		case 5:
 			RunDotfileBackup()
-		case "6":
-			fmt.Println("Goodbye Captain!")
+		case 6:
+			tui.PublicPrint([]string{"Goodbye Captain!"})
 			return
 		default:
-			fmt.Println("Invalid choice. Please select 1-6.")
+			tui.PublicPrint([]string{"Invalid choice. Please select 1-6."})
 		}
-	}
+	
 }
 
 // this handles the original package replication functionality
@@ -80,11 +72,11 @@ func runPackageReplication() {
 		return
 	}
 
-	fmt.Println("Distribution:", distro)
-	fmt.Println("Built On:", baseDistro)
+	tui.PublicPrint([]string{"Distribution:", distro})
+	tui.PublicPrint([]string{"Built On:", baseDistro})
 
 	packages := platform.FetchPackages(baseDistro)
-	jsonObj, err := output.BuildSystemJSON("linux", distro, baseDistro, packages)
+	jsonObj, err := generator.GenerateMetadata("linux", distro, baseDistro, packages)
 	if err != nil {
 		log.Println("Error marshalling JSON:", err)
 		return
@@ -105,9 +97,9 @@ func runPackageReplication() {
 		return
 	}
 
-	if err := output.GenerateInstallScript(baseDistro, packages, nil, domain.ScriptOutputPath); err != nil {
+	if err := generator.GenerateInstallScript(baseDistro, packages, nil, domain.ScriptOutputPath); err != nil {
 		log.Println("Error generating install script:", err)
 	} else {
-		fmt.Println("Script generated successfully at:", domain.ScriptOutputPath)
+		tui.PublicPrint([]string{"Script generated successfully at:", domain.ScriptOutputPath})
 	}
 }

@@ -9,9 +9,13 @@ import (
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
-func (am *AutomationManager) detectSystemDUnits() ([]domain.SystemDUnit, []domain.SystemDUnit, error) {
-	var services []domain.SystemDUnit
-	var timers []domain.SystemDUnit
+type SystemDUnit = domain.SystemDUnit
+type Cronjob = domain.Cronjob
+type AutomationData = domain.AutomationData
+
+func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit, error) {
+	var services []SystemDUnit
+	var timers []SystemDUnit
 
 	if _, err := os.Stat(domain.SystemdDirPath); os.IsNotExist(err) {
 		fmt.Printf("SystemD directory %s does not exist, skipping SystemD detection\n", domain.SystemdDirPath)
