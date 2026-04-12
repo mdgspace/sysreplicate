@@ -7,8 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mdgspace/sysreplicate/internal/domain"
 	"github.com/mdgspace/sysreplicate/internal/core/backup"
+	"github.com/mdgspace/sysreplicate/internal/core/generator"
+	"github.com/mdgspace/sysreplicate/internal/domain"
+	"github.com/mdgspace/sysreplicate/internal/platform"
+	"github.com/mdgspace/sysreplicate/internal/tui"
 )
 
 // handle backup integration
@@ -109,7 +112,7 @@ func RunRestore() {
 }
 
 // rest of the options
-func RunBackup() {
+func RunKeysBackup() {
 	fmt.Println("=== Key Backup Process ===")
 
 	//create backup manager
@@ -148,4 +151,43 @@ func RunDotfileBackup() {
 	}
 
 	fmt.Println("Backup complete!")
+}
+
+func RunPackageReplication() {
+	distro, baseDistro := platform.DetectDistro()
+	if distro == "unknown" && baseDistro == "unknown" {
+		log.Println("Failed to fetch the details of your distro")
+		return
+	}
+
+	tui.PrintText([]string{"Distribution:", distro})
+	tui.PrintText([]string{"Built On:", baseDistro})
+
+	packages := platform.FetchPackages(baseDistro)
+	jsonObj, err := generator.GenerateMetadata("linux", distro, baseDistro, packages)
+	if err != nil {
+		log.Println("Error marshalling JSON:", err)
+		return
+	}
+
+	if err := os.MkdirAll(domain.OutputSysDirPath, 0744); err != nil {
+		log.Println("Error creating sys output directory:", err)
+		return
+	}
+
+	if err := os.WriteFile(domain.JsonOutputPath, jsonObj, 0644); err != nil {
+		log.Println("Error writing JSON output:", err)
+		return
+	}
+
+	if err := os.MkdirAll(domain.OutputScriptsDirPath, 0744); err != nil {
+		log.Println("Error creating scripts output directory:", err)
+		return
+	}
+
+	if err := generator.GenerateInstallScript(baseDistro, packages, nil, domain.ScriptOutputPath); err != nil {
+		log.Println("Error generating install script:", err)
+	} else {
+		tui.PrintText([]string{"Script generated successfully at:", domain.ScriptOutputPath})
+	}
 }
