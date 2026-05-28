@@ -13,6 +13,9 @@ func expandHome(path string) string {
 	if strings.HasPrefix(path, "~") {
 		home, err := os.UserHomeDir()
 		if err == nil {
+			if len(path) == 1 {
+				return home
+			}
 			return filepath.Join(home, path[2:])
 		}
 	}
