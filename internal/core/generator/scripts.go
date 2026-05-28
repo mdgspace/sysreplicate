@@ -115,8 +115,7 @@ func GenerateInstallScript(baseDistro string, packages map[string][]string, auto
 	}
 
 	if automationData != nil {
-		am := automation.NewAutomationManager()
-		automationCommands := am.GenerateRestorationCommands(automationData)
+		automationCommands := automation.GenerateRestorationCommands(automationData)
 
 		if len(automationCommands) > 0 {
 			_, err = fmt.Fprintln(f, "\necho 'Restoring automation files...'")

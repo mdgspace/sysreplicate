@@ -9,7 +9,7 @@ import (
 )
 
 ///TODO(@jaadu): IMPROVE THE RESTORE LOGIC AND RESTORATION COMMAND
-func (am *AutomationManager) GenerateRestorationCommands(data *domain.AutomationData) []string {
+func GenerateRestorationCommands(data *domain.AutomationData) []string {
 	var commands []string
 	if len(data.SystemDServices) > 0 || len(data.SystemDTimers) > 0 {
 		commands = append(commands, "echo 'Restoring SystemD units...'")
