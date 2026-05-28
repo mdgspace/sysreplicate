@@ -33,6 +33,9 @@ func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit,
 		}
 
 		ext := filepath.Ext(path)
+		if len(ext) <= 1 {
+			return nil
+		}
 		unitName := filepath.Base(path)
 
 		content, err := am.readFileContent(path)
