@@ -5,19 +5,12 @@ import(
 	// "github.com/mdgspace/sysreplicate/system/output"
 )
 
-type SystemInfo struct { //IMP_NOTE!:: this is originally in output/traball.go, but I cannot import output package here as it induces cyclic import error
-	//so I define the same struct here, and removed it from output/tarball.go
-	Hostname string `json:"hostname"`
-	Username string `json:"username"`
-	OS       string `json:"os"`
-}
-
-type SystemInfoOutput struct { // this was in output/json.go
-	// originally named SystemInfo, which I changed to SystemInfoOutput to avoid conflict with the above SystemInfo
-	OS         string              `json:"os"`
-	Distro     string              `json:"distro"`
-	BaseDistro string              `json:"base_distro"`
-	Packages   map[string][]string `json:"packages"`
+type SystemInfo struct {
+	Hostname   string `json:"hostname"`
+	Username   string `json:"username"`
+	OS         string `json:"os"`
+	Distro     string `json:"distro"`
+	BaseDistro string `json:"base_distro"`
 }
 
 type BackupData struct {

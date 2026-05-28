@@ -5,21 +5,18 @@ import (
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
-// BuildSystemJSON creates a well-structured JSON object for the system info and packages.
-func GenerateMetadata(osType, distro, baseDistro string, packages map[string][]string) ([]byte, error) {
-
-	// type SystemInfo struct {
-	// 	OS         string              `json:"os"`
-	// 	Distro     string              `json:"distro"`
-	// 	BaseDistro string              `json:"base_distro"`
-	// 	Packages   map[string][]string `json:"packages"`
-	// }
-
-	info := domain.SystemInfoOutput{
-		OS:         osType,
-		Distro:     distro,
-		BaseDistro: baseDistro,
+// GenerateMetadata creates a well-structured JSON object for the system info and packages.
+func GenerateMetadata(info domain.SystemInfo, packages map[string][]string) ([]byte, error) {
+	output := struct {
+		OS         string              `json:"os"`
+		Distro     string              `json:"distro"`
+		BaseDistro string              `json:"base_distro"`
+		Packages   map[string][]string `json:"packages"`
+	}{
+		OS:         info.OS,
+		Distro:     info.Distro,
+		BaseDistro: info.BaseDistro,
 		Packages:   packages,
 	}
-	return json.MarshalIndent(info, "", "  ")
+	return json.MarshalIndent(output, "", "  ")
 }

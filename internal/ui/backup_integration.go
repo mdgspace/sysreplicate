@@ -164,7 +164,11 @@ func RunPackageReplication() {
 	tui.PrintText([]string{"Built On:", baseDistro})
 
 	packages := platform.FetchPackages(baseDistro)
-	jsonObj, err := generator.GenerateMetadata("linux", distro, baseDistro, packages)
+	jsonObj, err := generator.GenerateMetadata(domain.SystemInfo{
+		OS:         "linux",
+		Distro:     distro,
+		BaseDistro: baseDistro,
+	}, packages)
 	if err != nil {
 		log.Println("Error marshalling JSON:", err)
 		return
