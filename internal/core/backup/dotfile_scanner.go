@@ -8,15 +8,6 @@ import (
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
-type Dotfile struct {
-	Path     string
-	RealPath  string
-	IsDir    bool
-	IsBinary bool
-	Mode     os.FileMode
-	Content  string // ignore for the binary files
-}
-
 // expand ~ to home dir
 func expandHome(path string) string {
 	if strings.HasPrefix(path, "~") {
@@ -39,8 +30,8 @@ func containsNullByte(data []byte) bool {
 }
 
 // ScanDotfiles scans all dotfiles and returns their metadata + content
-func ScanDotfiles() ([]Dotfile, error) {
-	var results []Dotfile
+func ScanDotfiles() ([]domain.Dotfile, error) {
+	var results []domain.Dotfile
 	home, _ := os.UserHomeDir()
 
 	for _, raw := range domain.DotfilePaths {
@@ -52,11 +43,11 @@ func ScanDotfiles() ([]Dotfile, error) {
 		}
 
 		realPath, _ := filepath.Rel(home, full)
-		entry := Dotfile{
-			Path:    full,
+		entry := domain.Dotfile{
+			Path:     full,
 			RealPath: realPath,
-			IsDir:   info.IsDir(),
-			Mode:    info.Mode(),
+			IsDir:    info.IsDir(),
+			Mode:     info.Mode(),
 		}
 
 		if !info.IsDir() {
