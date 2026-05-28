@@ -21,7 +21,6 @@ func PrintError(s []string) {
 	for _, str := range s {
 		fmt.Fprintln(os.Stderr, errorStyle.Render(str))
 	}
-	os.Exit(1)
 }
 
 func RenderPrimaryBanner(str string) string {
