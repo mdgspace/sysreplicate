@@ -41,10 +41,12 @@ func Run() {
 
 // showMenu displays the main menu for Linux users
 func showMenu() {
-	// Display the menu options to the user
-	choice := tui.PublicOptions(string_list)
+	choice, err := tui.PublicOptions(string_list)
+	if err != nil {
+		tui.PrintError([]string{"Menu error: " + err.Error()})
+		return
+	}
 
-	// Map of user choices to their respective functions
 	choiceMap := map[int]func(){
 		1: RunUnifiedBackup,
 		2: RunRestore,
@@ -53,10 +55,9 @@ func showMenu() {
 		5: RunDotfileBackup,
 	}
 
-	// Execute the selected action based on user choice
 	if action, exists := choiceMap[choice]; exists {
 		action()
 	} else {
-		tui.PrintError([]string{"Invalid choice. Please select 1-6."})
+		tui.PrintError([]string{"Invalid choice. Please select 1-5."})
 	}
 }

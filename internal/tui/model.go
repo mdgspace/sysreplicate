@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -20,12 +19,11 @@ func initialModel(display_list []string) model {
 	}
 }
 
-func PublicOptions(string_list []string) int {
+func PublicOptions(string_list []string) (int, error) {
 	p := tea.NewProgram(initialModel(string_list))
 	m, err := p.Run()
 	if err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
-		os.Exit(1)
+		return 0, fmt.Errorf("failed to run TUI: %w", err)
 	}
-	return m.(model).selected
+	return m.(model).selected, nil
 }

@@ -203,23 +203,11 @@ func (ubm *UnifiedBackupManager) backupDotfiles(backupData *UnifiedBackupData) e
 		return fmt.Errorf("error scanning dotfiles: %w", err)
 	}
 
-	// Convert to output format and show details
-	outputFiles := make([]domain.Dotfile, len(files))
 	dotfileCount := 0
-	
-	for i, file := range files {
+	for _, file := range files {
 		if !file.IsDir && !file.IsBinary {
 			fmt.Printf("  - %s\n", file.Path)
 			dotfileCount++
-		}
-		
-		outputFiles[i] = domain.Dotfile{
-			Path:     file.Path,
-			RealPath: file.RealPath,
-			IsDir:    file.IsDir,
-			IsBinary: file.IsBinary,
-			Mode:     file.Mode,
-			Content:  file.Content,
 		}
 	}
 
@@ -229,7 +217,7 @@ func (ubm *UnifiedBackupManager) backupDotfiles(backupData *UnifiedBackupData) e
 		fmt.Printf("  Total dotfiles backed up: %d\n", dotfileCount)
 	}
 
-	backupData.Dotfiles = outputFiles
+	backupData.Dotfiles = files
 	return nil
 }
 

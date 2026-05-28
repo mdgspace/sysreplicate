@@ -8,31 +8,31 @@ import (
 )
 
 func (am *AutomationManager) BackupAutomation(data *domain.AutomationData, tarWriter *tar.Writer) error {
-	fmt.Println("Adding automation files to backup...")
-	
+	Log.Info("Adding automation files to backup...")
+
 	for _, service := range data.SystemDServices {
 		if err := am.addFileToTarball(service.Path, service.Content, "automation/systemd/", tarWriter); err != nil {
-			fmt.Printf("Warning: Failed to add SystemD service %s: %v\n", service.Name, err)
+			Log.Warn("Failed to add SystemD service %s: %v", service.Name, err)
 		}
 	}
 	for _, timer := range data.SystemDTimers {
 		if err := am.addFileToTarball(timer.Path, timer.Content, "automation/systemd/", tarWriter); err != nil {
-			fmt.Printf("Warning: Failed to add SystemD timer %s: %v\n", timer.Name, err)
+			Log.Warn("Failed to add SystemD timer %s: %v", timer.Name, err)
 		}
 	}
-	
+
 	for _, cronjob := range data.UserCronjobs {
 		if err := am.addFileToTarball(cronjob.Path, cronjob.Content, "automation/cron/", tarWriter); err != nil {
-			fmt.Printf("Warning: Failed to add user cronjob %s: %v\n", cronjob.Path, err)
+			Log.Warn("Failed to add user cronjob %s: %v", cronjob.Path, err)
 		}
 	}
-	
+
 	for _, cronjob := range data.SystemCronjobs {
 		if err := am.addFileToTarball(cronjob.Path, cronjob.Content, "automation/cron/", tarWriter); err != nil {
-			fmt.Printf("Warning: Failed to add system cronjob %s: %v\n", cronjob.Path, err)
+			Log.Warn("Failed to add system cronjob %s: %v", cronjob.Path, err)
 		}
 	}
-	
+
 	return nil
 }
 func (am *AutomationManager) addFileToTarball(originalPath, content, tarballPrefix string, tarWriter *tar.Writer) error {
