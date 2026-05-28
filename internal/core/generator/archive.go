@@ -87,17 +87,25 @@ func CreateDotfilesBackupTarball(meta *domain.BackupMetadata, tarballPath string
 		if f.IsDir {
 			continue
 		}
-		file, err := os.Open(f.Path)
-		if err != nil {
+
+		if err := func() error {
+			file, err := os.Open(f.Path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			info, _ := file.Stat()
+			hdr, _ := tar.FileInfoHeader(info, "")
+			hdr.Name = f.RealPath
+			if err := tarWriter.WriteHeader(hdr); err != nil {
+				return err
+			}
+			_, err = io.Copy(tarWriter, file)
+			return err
+		}(); err != nil {
 			continue
 		}
-		defer file.Close()
-
-		info, _ := file.Stat()
-		hdr, _ := tar.FileInfoHeader(info, "")
-		hdr.Name = f.RealPath
-		tarWriter.WriteHeader(hdr)
-		io.Copy(tarWriter, file)
 	}
 
 	return nil
