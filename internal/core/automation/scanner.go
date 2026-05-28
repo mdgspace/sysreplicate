@@ -18,7 +18,7 @@ func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit,
 	var timers []SystemDUnit
 
 	if _, err := os.Stat(domain.SystemdDirPath); os.IsNotExist(err) {
-		fmt.Printf("SystemD directory %s does not exist, skipping SystemD detection\n", domain.SystemdDirPath)
+		Log.Warn("SystemD directory %s does not exist, skipping SystemD detection", domain.SystemdDirPath)
 		return services, timers, nil
 	}
 	err := filepath.Walk(domain.SystemdDirPath, func(path string, info os.FileInfo, err error) error {
@@ -37,7 +37,7 @@ func (am *AutomationManager) detectSystemDUnits() ([]SystemDUnit, []SystemDUnit,
 
 		content, err := am.readFileContent(path)
 		if err != nil {
-			fmt.Printf("Warning: Could not read SystemD unit %s: %v\n", path, err)
+			Log.Warn("Could not read SystemD unit %s: %v", path, err)
 			return nil
 		}
 		isEnabled, isActive := am.getSystemDUnitStatus(unitName)

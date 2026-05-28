@@ -1,12 +1,14 @@
 package automation
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/mdgspace/sysreplicate/internal/domain"
+	"github.com/mdgspace/sysreplicate/internal/util"
 )
+
+var Log = util.NewLogger(util.InfoLevel)
 
 type AutomationManager struct {
 	username string
@@ -22,18 +24,18 @@ func NewAutomationManager() *AutomationManager {
 	}
 }
 func (am *AutomationManager) DetectAutomation() (*domain.AutomationData, error) {
-	fmt.Println("Detecting automation files...")
-	
+	Log.Info("Detecting automation files...")
+
 	data := &domain.AutomationData{
 		SystemDServices: make([]domain.SystemDUnit, 0),
 		SystemDTimers:   make([]domain.SystemDUnit, 0),
 		UserCronjobs:    make([]domain.Cronjob, 0),
 		SystemCronjobs:  make([]domain.Cronjob, 0),
 	}
-	
+
 	systemdServices, systemdTimers, err := am.detectSystemDUnits()
 	if err != nil {
-		fmt.Printf("Warning: Failed to detect SystemD units: %v\n", err)
+		Log.Warn("Failed to detect SystemD units: %v", err)
 	} else {
 		data.SystemDServices = systemdServices
 		data.SystemDTimers = systemdTimers
@@ -41,45 +43,43 @@ func (am *AutomationManager) DetectAutomation() (*domain.AutomationData, error) 
 
 	userCronjobs, systemCronjobs, err := am.detectCronjobs()
 	if err != nil {
-		fmt.Printf("Warning: Failed to detect cronjobs: %v\n", err)
+		Log.Warn("Failed to detect cronjobs: %v", err)
 	} else {
 		data.UserCronjobs = userCronjobs
 		data.SystemCronjobs = systemCronjobs
 	}
-	
-	fmt.Printf("Detected %d SystemD services, %d SystemD timers, %d user cronjobs, %d system cronjobs\n",
+
+	Log.Info("Detected %d SystemD services, %d SystemD timers, %d user cronjobs, %d system cronjobs",
 		len(data.SystemDServices), len(data.SystemDTimers), len(data.UserCronjobs), len(data.SystemCronjobs))
 
-
-
 	if len(data.SystemDServices) > 0 {
-		fmt.Println("  SystemD Services found:")
+		Log.Debug("SystemD Services found:")
 		for _, service := range data.SystemDServices {
-			fmt.Printf("    - %s (%s)\n", service.Name, service.Path)
+			Log.Debug("  - %s (%s)", service.Name, service.Path)
 		}
 	}
-	
+
 	if len(data.SystemDTimers) > 0 {
-		fmt.Println("  SystemD Timers found:")
+		Log.Debug("SystemD Timers found:")
 		for _, timer := range data.SystemDTimers {
-			fmt.Printf("    - %s (%s)\n", timer.Name, timer.Path)
+			Log.Debug("  - %s (%s)", timer.Name, timer.Path)
 		}
 	}
-	
+
 	if len(data.UserCronjobs) > 0 {
-		fmt.Println("  User Cronjobs found:")
+		Log.Debug("User Cronjobs found:")
 		for _, cronjob := range data.UserCronjobs {
-			fmt.Printf("    - %s\n", cronjob.Path)
+			Log.Debug("  - %s", cronjob.Path)
 		}
 	}
-	
+
 	if len(data.SystemCronjobs) > 0 {
-		fmt.Println("  System Cronjobs found:")
+		Log.Debug("System Cronjobs found:")
 		for _, cronjob := range data.SystemCronjobs {
-			fmt.Printf("    - %s\n", cronjob.Path)
+			Log.Debug("  - %s", cronjob.Path)
 		}
 	}
-	
+
 	return data, nil
 }
 /////symlink logicc
