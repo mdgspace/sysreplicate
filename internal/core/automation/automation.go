@@ -39,14 +39,6 @@ func (am *AutomationManager) DetectAutomation() (*domain.AutomationData, error) 
 		data.SystemDTimers = systemdTimers
 	}
 
-	// usercustom, systemCronjobs, err := am.detectCronjobs()
-	// if err != nil {
-	// 	fmt.Printf("Warning: Failed to detect customs: %v\n", err)
-	// } else {
-	// 	data.UserCronjobs = usercustoms
-	// 	data.SystemCronjobs = 
-	// }
-	
 	userCronjobs, systemCronjobs, err := am.detectCronjobs()
 	if err != nil {
 		fmt.Printf("Warning: Failed to detect cronjobs: %v\n", err)

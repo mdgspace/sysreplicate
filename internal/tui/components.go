@@ -28,10 +28,6 @@ func RenderPrimaryBanner(str string) string {
 	return primaryBanner.Render(str)
 }
 
-func RenderSecondaryBanner(str string) string {
-	return secondaryBanner.Render(str)
-}
-
 func RenderFooter(str string) string {
 	return footerStyle.Render(str)
 }
