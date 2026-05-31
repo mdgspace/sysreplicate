@@ -20,7 +20,7 @@ const (
 	VoidInstallCmd       = "sudo xbps-install -y"
 	OpenSUSEInstallCmd   = "sudo zypper install -y"
 	AlpineInstallCmd     = "sudo apk add"
-	NixOSInstallCmd      = "nix-env -iA nixpkgs."
+	NixOSInstallCmd      = "nix-env -iA"
 	GentooInstallCmd     = "sudo emerge -q"
 
 	DebianFetchCmd = `dpkg-query -W -f='${Package}\n' | sort > /tmp/all.txt

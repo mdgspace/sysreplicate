@@ -32,6 +32,14 @@ func GenerateInstallScript(baseDistro string, packages map[string][]string, auto
 		officialInstallCmd = domain.RhelInstallCmd
 	case "void":
 		officialInstallCmd = domain.VoidInstallCmd
+	case "opensuse":
+		officialInstallCmd = domain.OpenSUSEInstallCmd
+	case "alpine":
+		officialInstallCmd = domain.AlpineInstallCmd
+	case "nixos":
+		officialInstallCmd = domain.NixOSInstallCmd
+	case "gentoo":
+		officialInstallCmd = domain.GentooInstallCmd
 	default:
 		_, _ = fmt.Fprintln(f, "echo 'Unsupported distro for script generation.'")
 		return nil
@@ -48,7 +56,11 @@ func GenerateInstallScript(baseDistro string, packages map[string][]string, auto
 				if pkg == "" {
 					continue
 				}
-				_, err = fmt.Fprintf(f, "%s %s || true\n", officialInstallCmd, pkg)
+				if baseDistro == "nixos" {
+					_, err = fmt.Fprintf(f, "%s nixpkgs.%s || true\n", officialInstallCmd, pkg)
+				} else {
+					_, err = fmt.Fprintf(f, "%s %s || true\n", officialInstallCmd, pkg)
+				}
 				if err != nil {
 					return err
 				}
