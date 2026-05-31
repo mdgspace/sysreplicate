@@ -44,12 +44,6 @@ func EncryptFile(filePath string, config *EncryptionConfig) (string, error) {
 	return encoded, nil
 }
 
-func GenerateKey() ([]byte, error) {
-	key := make([]byte, 32)
-	_, err := rand.Read(key)
-	return key, err
-}
-
 const (
 	argonTime    uint32 = 3
 	argonMemory  uint32 = 64 * 1024
