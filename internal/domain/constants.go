@@ -14,10 +14,14 @@ const (
 	CronDDirPath             = "/etc/cron.d"
 	UnifiedTarballBasePath   = "dist/unified-backup-%s.tar.gz"
 
-	DebianInstallCmd = "sudo apt-get install -y"
-	ArchInstallCmd   = "sudo pacman -S --noconfirm"
-	RhelInstallCmd   = "sudo dnf install -y"
-	VoidInstallCmd   = "sudo xbps-install -y"
+	DebianInstallCmd     = "sudo apt-get install -y"
+	ArchInstallCmd       = "sudo pacman -S --noconfirm"
+	RhelInstallCmd       = "sudo dnf install -y"
+	VoidInstallCmd       = "sudo xbps-install -y"
+	OpenSUSEInstallCmd   = "sudo zypper install -y"
+	AlpineInstallCmd     = "sudo apk add"
+	NixOSInstallCmd      = "nix-env -iA"
+	GentooInstallCmd     = "sudo emerge -q"
 
 	DebianFetchCmd = `dpkg-query -W -f='${Package}\n' | sort > /tmp/all.txt
 apt-mark showmanual | sort > /tmp/manual.txt
@@ -27,6 +31,10 @@ rm /tmp/all.txt /tmp/manual.txt`
 	ArchYayFetchCmd      = `pacman -Qem | cut -d' ' -f1`
 	RhelFetchCmd         = "rpm -qa"
 	VoidFetchCmd         = "xbps-query -l"
+	OpenSUSEFetchCmd     = "zypper search --installed-only | tail -n +3 | awk '{print $2}'"
+	AlpineFetchCmd       = "apk info -v"
+	NixOSFetchCmd        = "nix-env -q"
+	GentooFetchCmd       = "ls /var/db/pkg/*/* | xargs -n1 basename"
 
 	FlatpakFetchCmd = "flatpak list --app --columns=origin,application"
 	SnapFetchCmd    = "snap list | awk 'NR>1 {print $1}'"

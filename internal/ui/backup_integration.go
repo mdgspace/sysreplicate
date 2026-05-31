@@ -42,6 +42,14 @@ func RunUnifiedBackup() {
 		return
 	}
 
+	if platform.IsImmutableDistro() {
+		fmt.Println()
+		fmt.Println("WARNING: Immutable distro detected (Silverblue/Kinoite/SteamOS/MicroOS).")
+		fmt.Println("  Standard package install commands do not apply. Use rpm-ostree or")
+		fmt.Println("  transactional-update manually to layer packages on immutable systems.")
+		fmt.Println()
+	}
+
 	ubm := backup.NewUnifiedBackupManager()
 
 	fmt.Println("\nOptional: Add custom key locations")

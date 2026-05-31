@@ -24,6 +24,18 @@ func FetchPackages(baseDistro string) map[string][]string {
 
     case "void":
         cmds["official_packages"] = exec.Command("sh", "-c", domain.VoidFetchCmd)
+
+    case "opensuse":
+        cmds["official_packages"] = exec.Command("sh", "-c", domain.OpenSUSEFetchCmd)
+
+    case "alpine":
+        cmds["official_packages"] = exec.Command("sh", "-c", domain.AlpineFetchCmd)
+
+    case "nixos":
+        cmds["official_packages"] = exec.Command("sh", "-c", domain.NixOSFetchCmd)
+
+    case "gentoo":
+        cmds["official_packages"] = exec.Command("sh", "-c", domain.GentooFetchCmd)
     default:
         log.Println("Unsupported distro for native package manager detection")
     }
