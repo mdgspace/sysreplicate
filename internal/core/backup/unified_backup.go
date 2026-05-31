@@ -18,15 +18,15 @@ import (
 
 // all backup information in one structure
 type UnifiedBackupData struct {
-	Timestamp     time.Time                   `json:"timestamp"`
-	SystemInfo    domain.SystemInfo           `json:"system_info"`
-	EncryptedKeys map[string]domain.EncryptedKey `json:"encrypted_keys"`
-	Dotfiles      []domain.Dotfile            `json:"dotfiles"`
-	Packages      map[string][]string         `json:"packages"`
-	Automation    *domain.AutomationData `json:"automation"`
-	EncryptionKey []byte                      `json:"encryption_key"`
-	Distro        string                      `json:"distro"`
-	BaseDistro    string                      `json:"base_distro"`
+	Timestamp           time.Time                    `json:"timestamp"`
+	SystemInfo          domain.SystemInfo            `json:"system_info"`
+	EncryptedKeys       map[string]domain.EncryptedKey `json:"encrypted_keys"`
+	Dotfiles            []domain.Dotfile             `json:"dotfiles"`
+	Packages            map[string][]string          `json:"packages"`
+	Automation          *domain.AutomationData       `json:"automation"`
+	Distro              string                       `json:"distro"`
+	BaseDistro          string                       `json:"base_distro"`
+	KeyDerivationParams *domain.KeyDerivationParams  `json:"key_derivation_params,omitempty"`
 }
 
 // complete system backup
