@@ -18,15 +18,15 @@ import (
 
 // all backup information in one structure
 type UnifiedBackupData struct {
-	Timestamp     time.Time                   `json:"timestamp"`
-	SystemInfo    domain.SystemInfo           `json:"system_info"`
-	EncryptedKeys map[string]domain.EncryptedKey `json:"encrypted_keys"`
-	Dotfiles      []domain.Dotfile            `json:"dotfiles"`
-	Packages      map[string][]string         `json:"packages"`
-	Automation    *domain.AutomationData `json:"automation"`
-	EncryptionKey []byte                      `json:"encryption_key"`
-	Distro        string                      `json:"distro"`
-	BaseDistro    string                      `json:"base_distro"`
+	Timestamp           time.Time                    `json:"timestamp"`
+	SystemInfo          domain.SystemInfo            `json:"system_info"`
+	EncryptedKeys       map[string]domain.EncryptedKey `json:"encrypted_keys"`
+	Dotfiles            []domain.Dotfile             `json:"dotfiles"`
+	Packages            map[string][]string          `json:"packages"`
+	Automation          *domain.AutomationData       `json:"automation"`
+	Distro              string                       `json:"distro"`
+	BaseDistro          string                       `json:"base_distro"`
+	KeyDerivationParams *domain.KeyDerivationParams  `json:"key_derivation_params,omitempty"`
 }
 
 // complete system backup
@@ -39,30 +39,28 @@ func NewUnifiedBackupManager() *UnifiedBackupManager {
 }
 
 // complete system backup including keys, dotfiles, and packages
-func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error {
+func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string, passphrase string) error {
 	fmt.Println("Starting unified system backup...")
 
-	// Generate encryption key
-	key, err := GenerateKey()
+	keyParams, err := NewKeyDerivationParams()
 	if err != nil {
-		return fmt.Errorf("failed to generate encryption key: %w", err)
+		return fmt.Errorf("failed to generate key derivation params: %w", err)
 	}
 
+	derivedKey := DeriveKey(passphrase, keyParams)
 	ubm.config = &EncryptionConfig{
-		Key: key,
+		Key: derivedKey,
 	}
 
-	// Get system information
 	hostname, _ := os.Hostname()
 	username := os.Getenv("USER")
 	if username == "" {
 		username = os.Getenv("USERNAME")
 	}
 
-	// Detect distro and get packages
 	distro, baseDistro := platform.DetectDistro()
 	packages := platform.FetchPackages(baseDistro)
-	
+
 	fmt.Printf("Detected distro: %s (%s)\n", distro, baseDistro)
 	totalPackages := 0
 	for repo, pkgs := range packages {
@@ -74,19 +72,18 @@ func (ubm *UnifiedBackupManager) CreateUnifiedBackup(customPaths []string) error
 	fmt.Printf("  Total packages to restore: %d\n", totalPackages)
 	fmt.Println()
 
-	// Create unified backup data
 	backupData := &UnifiedBackupData{
-		Timestamp:     time.Now(),
+		Timestamp:          time.Now(),
 		SystemInfo: domain.SystemInfo{
 			Hostname: hostname,
 			Username: username,
 			OS:       "linux",
 		},
-		EncryptedKeys: make(map[string]domain.EncryptedKey),
-		EncryptionKey: key,
-		Packages:      packages,
-		Distro:        distro,
-		BaseDistro:    baseDistro,
+		EncryptedKeys:       make(map[string]domain.EncryptedKey),
+		KeyDerivationParams: keyParams,
+		Packages:            packages,
+		Distro:              distro,
+		BaseDistro:          baseDistro,
 	}
 
 	// 1. Backup SSH/GPG keys
@@ -239,7 +236,6 @@ func (ubm *UnifiedBackupManager) backupAutomation(backupData *UnifiedBackupData)
 
 // creating one single tarball containing all backup data
 func (ubm *UnifiedBackupManager) createUnifiedTarball(backupData *UnifiedBackupData, tarballPath string) error {
-	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(tarballPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
@@ -256,10 +252,26 @@ func (ubm *UnifiedBackupManager) createUnifiedTarball(backupData *UnifiedBackupD
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
-	//// Add main backup metadata
 	jsonData, err := json.MarshalIndent(backupData, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal backup data: %w", err)
+	}
+
+	hash, err := HashPayload(jsonData)
+	if err != nil {
+		return fmt.Errorf("failed to hash backup data: %w", err)
+	}
+
+	hashEntry := &tar.Header{
+		Name: "integrity.hash",
+		Mode: 0644,
+		Size: int64(len(hash)),
+	}
+	if err := tarWriter.WriteHeader(hashEntry); err != nil {
+		return fmt.Errorf("failed to write integrity.hash header: %w", err)
+	}
+	if _, err := tarWriter.Write([]byte(hash)); err != nil {
+		return fmt.Errorf("failed to write integrity.hash: %w", err)
 	}
 
 	header := &tar.Header{
@@ -267,11 +279,9 @@ func (ubm *UnifiedBackupManager) createUnifiedTarball(backupData *UnifiedBackupD
 		Mode: 0644,
 		Size: int64(len(jsonData)),
 	}
-
 	if err := tarWriter.WriteHeader(header); err != nil {
 		return fmt.Errorf("failed to write header: %w", err)
 	}
-
 	if _, err := tarWriter.Write(jsonData); err != nil {
 		return fmt.Errorf("failed to write backup data: %w", err)
 	}

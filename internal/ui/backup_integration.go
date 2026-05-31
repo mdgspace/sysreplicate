@@ -18,15 +18,36 @@ import (
 func RunUnifiedBackup() {
 	fmt.Println("=== Unified System Backup (Keys + Dotfiles + Packages) ===")
 
-	// unified backup manager
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Print("Enter encryption passphrase: ")
+	if !scanner.Scan() {
+		fmt.Println("Failed to read passphrase")
+		return
+	}
+	passphrase := strings.TrimSpace(scanner.Text())
+	if passphrase == "" {
+		fmt.Println("Passphrase cannot be empty")
+		return
+	}
+
+	fmt.Print("Confirm passphrase: ")
+	if !scanner.Scan() {
+		fmt.Println("Failed to read confirmation")
+		return
+	}
+	confirm := strings.TrimSpace(scanner.Text())
+	if passphrase != confirm {
+		fmt.Println("Passphrases do not match")
+		return
+	}
+
 	ubm := backup.NewUnifiedBackupManager()
 
-	// gert all the custom key paths from user
 	fmt.Println("\nOptional: Add custom key locations")
 	customPaths := backup.GetCustomPaths()
 
-	// Create unified backup
-	err := ubm.CreateUnifiedBackup(customPaths)
+	err := ubm.CreateUnifiedBackup(customPaths, passphrase)
 	if err != nil {
 		log.Printf("Unified backup failed: %v", err)
 		return
@@ -35,10 +56,12 @@ func RunUnifiedBackup() {
 	fmt.Println("Complete system backup completed successfully!")
 	fmt.Println()
 	fmt.Println("Your backup includes:")
-	fmt.Println("- SSH/GPG keys (encrypted)")
+	fmt.Println("- SSH/GPG keys (encrypted with passphrase)")
 	fmt.Println("- Dotfiles (.bashrc, .vimrc, .gitconfig, etc.)")
 	fmt.Println("- Package lists for reinstallation")
 	fmt.Println("- System automation files (SystemD services, timers, cronjobs)")
+	fmt.Println()
+	fmt.Println("IMPORTANT: Remember your passphrase! You will need it to restore.")
 }
 
 // system restoration from backup
@@ -94,9 +117,19 @@ func RunRestore() {
 		return
 	}
 
-	// creating previously defined restore manager and run restoration
+	fmt.Print("Enter backup passphrase: ")
+	if !scanner.Scan() {
+		fmt.Println("Failed to read passphrase")
+		return
+	}
+	passphrase := strings.TrimSpace(scanner.Text())
+	if passphrase == "" {
+		fmt.Println("Passphrase cannot be empty")
+		return
+	}
+
 	rm := backup.NewRestoreManager()
-	err = rm.RestoreFromBackup(tarballPath)
+	err = rm.RestoreFromBackup(tarballPath, passphrase)
 	if err != nil {
 		log.Printf("Restoration failed: %v", err)
 		return
@@ -115,14 +148,34 @@ func RunRestore() {
 func RunKeysBackup() {
 	fmt.Println("=== Key Backup Process ===")
 
-	//create backup manager
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Print("Enter encryption passphrase: ")
+	if !scanner.Scan() {
+		fmt.Println("Failed to read passphrase")
+		return
+	}
+	passphrase := strings.TrimSpace(scanner.Text())
+	if passphrase == "" {
+		fmt.Println("Passphrase cannot be empty")
+		return
+	}
+
+	fmt.Print("Confirm passphrase: ")
+	if !scanner.Scan() {
+		fmt.Println("Failed to read confirmation")
+		return
+	}
+	if passphrase != strings.TrimSpace(scanner.Text()) {
+		fmt.Println("Passphrases do not match")
+		return
+	}
+
 	backupManager := backup.NewBackupManager()
 
-	//get custom paths from user
 	customPaths := backup.GetCustomPaths()
 
-	//create backup
-	err := backupManager.CreateBackup(customPaths)
+	err := backupManager.CreateBackup(customPaths, passphrase)
 	if err != nil {
 		log.Printf("Backup failed: %v", err)
 		return

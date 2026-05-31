@@ -13,11 +13,18 @@ type SystemInfo struct {
 	BaseDistro string `json:"base_distro"`
 }
 
+type KeyDerivationParams struct {
+	Salt       []byte `json:"salt"`
+	TimeCost   uint32 `json:"time_cost"`
+	MemoryCost uint32 `json:"memory_cost"`
+	Threads    uint8  `json:"threads"`
+}
+
 type BackupData struct {
-	Timestamp     time.Time               `json:"timestamp"`
-	SystemInfo    SystemInfo              `json:"system_info"`
-	EncryptedKeys map[string]EncryptedKey `json:"encrypted_keys"`
-	EncryptionKey []byte                  `json:"encryption_key"`
+	Timestamp           time.Time                `json:"timestamp"`
+	SystemInfo          SystemInfo               `json:"system_info"`
+	EncryptedKeys       map[string]EncryptedKey  `json:"encrypted_keys"`
+	KeyDerivationParams *KeyDerivationParams     `json:"key_derivation_params,omitempty"`
 }
 
 type EncryptedKey struct {
