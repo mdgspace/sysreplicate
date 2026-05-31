@@ -3,47 +3,55 @@ package generator
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+
 	"github.com/mdgspace/sysreplicate/internal/domain"
 )
 
 // create a compressed tarball with the backup data
 func CreateBackupTarball(backupData *domain.BackupData, tarballPath string) error {
-	//create tarball file
 	file, err := os.Create(tarballPath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	//gzip writer
 	gzipWriter := gzip.NewWriter(file)
 	defer gzipWriter.Close()
 
-	//tar writer
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
-	//convertto JSON
 	jsonData, err := json.MarshalIndent(backupData, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	//add JSON file to tarball
+	hash := fmt.Sprintf("%x", sha256.Sum256(jsonData))
+	hashEntry := &tar.Header{
+		Name: "integrity.hash",
+		Mode: 0644,
+		Size: int64(len(hash)),
+	}
+	if err := tarWriter.WriteHeader(hashEntry); err != nil {
+		return err
+	}
+	if _, err := tarWriter.Write([]byte(hash)); err != nil {
+		return err
+	}
+
 	header := &tar.Header{
 		Name: "backup.json",
 		Mode: 0644,
 		Size: int64(len(jsonData)),
 	}
-
 	if err := tarWriter.WriteHeader(header); err != nil {
 		return err
 	}
-
 	if _, err := tarWriter.Write(jsonData); err != nil {
 		return err
 	}

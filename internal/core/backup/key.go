@@ -22,45 +22,39 @@ func NewBackupManager() *BackupManager {
 }
 
 // create a complete backup of keys (no password required)
-func (bm *BackupManager) CreateBackup(customPaths []string) error {
+func (bm *BackupManager) CreateBackup(customPaths []string, passphrase string) error {
 	fmt.Println("Starting key backup process...")
 
-	//generate random encryption key (no password needed)
-	key, err := GenerateKey()
+	keyParams, err := NewKeyDerivationParams()
 	if err != nil {
-		return fmt.Errorf("failed to generate encryption key: %w", err)
+		return fmt.Errorf("failed to generate key derivation params: %w", err)
 	}
 
 	bm.config = &EncryptionConfig{
-		Key: key,
+		Key: DeriveKey(passphrase, keyParams),
 	}
 
-	// search standard locations
 	fmt.Println("searching standard key locations...")
 	standardLocations, err := searchStandardLocations()
 	if err != nil {
 		return fmt.Errorf("failed to search standard locations: %w", err)
 	}
 
-	//add custom paths
 	customLocations := bm.processCustomPaths(customPaths)
 
-	//combine all locations
 	allLocations := append(standardLocations, customLocations...)
 	if len(allLocations) == 0 {
 		fmt.Println("No key locations found to backup.")
 		return nil
 	}
 
-	//create backup data
 	backupData := &domain.BackupData{
-		Timestamp:     time.Now(),
-		SystemInfo:    bm.getSystemInfo(),
-		EncryptedKeys: make(map[string]domain.EncryptedKey),
-		EncryptionKey: key, // Store the key in backup data
+		Timestamp:           time.Now(),
+		SystemInfo:          bm.getSystemInfo(),
+		EncryptedKeys:       make(map[string]domain.EncryptedKey),
+		KeyDerivationParams: keyParams,
 	}
 
-	//encrypt and store keys
 	fmt.Println("Encrypting keys...")
 	for _, location := range allLocations {
 		err := bm.processLocation(location, backupData)
@@ -70,7 +64,6 @@ func (bm *BackupManager) CreateBackup(customPaths []string) error {
 		}
 	}
 
-	//creating tarball for the backup storing
 	fmt.Println("Creating backup tarball...")
 	tarballPath := fmt.Sprintf("dist/key-backup-%s.tar.gz",
 		time.Now().Format("2006-01-02-15-04-05"))

@@ -26,26 +26,22 @@ func NewRestoreManager() *RestoreManager {
 }
 
 // restoring the complete system from a unified backup
-func (rm *RestoreManager) RestoreFromBackup(tarballPath string) error {
+func (rm *RestoreManager) RestoreFromBackup(tarballPath string, passphrase string) error {
 	fmt.Printf("Starting system restore from: %s\n", tarballPath)
 
-	// extract and parse backup data
 	err := rm.extractBackupData(tarballPath)
 	if err != nil {
 		return fmt.Errorf("failed to extract backup data: %w", err)
 	}
 
-	// backup information and furthur instructions
-	///s
 	fmt.Printf("Backup created on: %s\n", rm.backupData.Timestamp.Format("2006-01-09 15:04:05"))
-	fmt.Printf("Original system: %s@%s (%s)\n", 
-		rm.backupData.SystemInfo.Username, 
+	fmt.Printf("Original system: %s@%s (%s)\n",
+		rm.backupData.SystemInfo.Username,
 		rm.backupData.SystemInfo.Hostname,
 		rm.backupData.Distro)
 
-	// 1. Restore SSH/GPG keys
 	fmt.Println("Restoring SSH/GPG keys...")
-	err = rm.restoreKeys()
+	err = rm.restoreKeys(passphrase)
 	if err != nil {
 		fmt.Printf("Warning: Key restoration failed: %v\n", err)
 	}
@@ -108,6 +104,11 @@ func (rm *RestoreManager) extractBackupData(tarballPath string) error {
 
 	tarReader := tar.NewReader(gzipReader)
 
+	var (
+		jsonData []byte
+		hashStr  string
+	)
+
 	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
@@ -117,29 +118,46 @@ func (rm *RestoreManager) extractBackupData(tarballPath string) error {
 			return fmt.Errorf("failed to read tar entry: %w", err)
 		}
 
-		if header.Name == "unified_backup.json" {
+		switch header.Name {
+		case "integrity.hash":
+			data, err := io.ReadAll(tarReader)
+			if err != nil {
+				return fmt.Errorf("failed to read integrity.hash: %w", err)
+			}
+			hashStr = string(data)
+		case "unified_backup.json":
 			data, err := io.ReadAll(tarReader)
 			if err != nil {
 				return fmt.Errorf("failed to read backup data: %w", err)
 			}
-
-			rm.backupData = &UnifiedBackupData{}
-			err = json.Unmarshal(data, rm.backupData)
-			if err != nil {
-				return fmt.Errorf("failed to parse backup data: %w", err)
-			}
-			
-			return nil
+			jsonData = data
 		}
 	}
 
-	return fmt.Errorf("backup data not found in tarball")
+	if jsonData == nil {
+		return fmt.Errorf("backup data not found in tarball")
+	}
+
+	if hashStr != "" && !VerifyHash(jsonData, hashStr) {
+		return fmt.Errorf("integrity check failed: backup data may be corrupted or tampered")
+	}
+
+	rm.backupData = &UnifiedBackupData{}
+	if err := json.Unmarshal(jsonData, rm.backupData); err != nil {
+		return fmt.Errorf("failed to parse backup data: %w", err)
+	}
+
+	return nil
 }
 
 // decryptiug and restoring SSH/GPG keys to their original locations
-func (rm *RestoreManager) restoreKeys() error {
+func (rm *RestoreManager) restoreKeys(passphrase string) error {
+	if rm.backupData.KeyDerivationParams == nil {
+		return fmt.Errorf("no key derivation parameters found in backup")
+	}
+	derivedKey := DeriveKey(passphrase, rm.backupData.KeyDerivationParams)
 	config := &EncryptionConfig{
-		Key: rm.backupData.EncryptionKey,
+		Key: derivedKey,
 	}
 
 	restoredCount := 0
